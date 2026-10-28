@@ -1,0 +1,2694 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>Asistente Ciudadano</title>
+  <style>
+    :root {
+      --primary: #075e54;
+      --primary-dark: #054c44;
+      --primary-gradient: linear-gradient(135deg, #075e54 0%, #0a786c 100%);
+      --accent: #25d366;
+      --purple: #6d28d9;
+      --teal-proy: #0d9488;
+      --bg-app: #d1d7db;
+      --bg-chat: #efeae2;
+      --user-msg: #d9fdd3;
+      --bot-msg: #ffffff;
+      --text-main: #111b21;
+      --text-muted: #54656f;
+      --shadow-sm: 0 1px 3px rgba(17, 27, 33, 0.1);
+      --shadow-md: 0 8px 28px rgba(17, 27, 33, 0.18);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background: var(--bg-app);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100dvh;
+      overflow: hidden;
+      color: var(--text-main);
+    }
+
+    .app-container {
+      width: 100%;
+      max-width: 500px;
+      height: 100dvh;
+      background: var(--bg-chat);
+      background-image: radial-gradient(rgba(7, 94, 84, 0.045) 1px, transparent 0);
+      background-size: 18px 18px;
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--shadow-md);
+      position: relative;
+      overflow: hidden;
+    }
+
+    @media (min-width: 600px) {
+      .app-container {
+        height: 95dvh;
+        max-height: 880px;
+        border-radius: 18px;
+      }
+    }
+
+    /* Toast Flotante */
+    .toast {
+      position: absolute;
+      top: 68px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-15px);
+      background: rgba(17, 27, 33, 0.95);
+      color: #fff;
+      padding: 10px 18px;
+      border-radius: 22px;
+      font-size: 13.5px;
+      font-weight: 700;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+      z-index: 120;
+      text-align: center;
+      max-width: 92%;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* MENÚ LATERAL IZQUIERDO (DRAWER ACCESIBLE) */
+    .drawer-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(2px);
+      z-index: 90;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+    .drawer-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .side-drawer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: 86%;
+      max-width: 340px;
+      background: #ffffff;
+      z-index: 100;
+      transform: translateX(-100%);
+      transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+      display: flex;
+      flex-direction: column;
+      box-shadow: 6px 0 25px rgba(0,0,0,0.25);
+    }
+    .side-drawer.open {
+      transform: translateX(0);
+    }
+    .drawer-header {
+      background: var(--primary-gradient);
+      color: #fff;
+      padding: 18px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .drawer-header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .drawer-close {
+      background: rgba(255,255,255,0.2);
+      border: none;
+      color: #fff;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      font-size: 18px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .drawer-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .drawer-section-title {
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      color: #475569;
+      padding: 4px 6px 2px 6px;
+      letter-spacing: 0.4px;
+    }
+    .menu-big-btn {
+      width: 100%;
+      background: #f8fafc;
+      border: 2px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      text-align: left;
+      cursor: pointer;
+      transition: transform 0.12s ease, background 0.15s ease;
+    }
+    .menu-big-btn:active {
+      transform: scale(0.97);
+      background: #e2e8f0;
+    }
+    .menu-big-btn.proy-highlight {
+      background: #f0fdfa;
+      border-color: #5eead4;
+    }
+    .menu-big-btn.feria-highlight {
+      background: #f5f3ff;
+      border-color: #c4b5fd;
+    }
+    .menu-big-btn.reclamo-highlight {
+      background: #fffbeb;
+      border-color: #fde68a;
+    }
+    .menu-big-btn.urgente-highlight {
+      background: #fef2f2;
+      border-color: #fecaca;
+    }
+    .menu-icon {
+      font-size: 28px;
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+      flex-shrink: 0;
+    }
+    .menu-text strong {
+      display: block;
+      font-size: 15px;
+      color: #0f172a;
+      font-weight: 800;
+      line-height: 1.2;
+    }
+    .menu-text span {
+      display: block;
+      font-size: 12.5px;
+      color: #475569;
+      margin-top: 3px;
+      font-weight: 500;
+    }
+
+    /* Header */
+    .header {
+      background: var(--primary-gradient);
+      color: #fff;
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 20;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.14);
+      gap: 8px;
+    }
+    .header-info {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      min-width: 0;
+    }
+    .btn-menu-ham {
+      background: rgba(255, 255, 255, 0.2);
+      border: 1.5px solid rgba(255, 255, 255, 0.4);
+      color: #fff;
+      padding: 7px 11px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-shrink: 0;
+    }
+    .btn-menu-ham:active { transform: scale(0.94); }
+
+    .title h1 {
+      font-size: 15px;
+      font-weight: 800;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .title p {
+      font-size: 11.5px;
+      color: #d1fae5;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin-top: 1px;
+    }
+    .online-dot {
+      width: 7px;
+      height: 7px;
+      background: #4ade80;
+      border-radius: 50%;
+      box-shadow: 0 0 6px #4ade80;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+    .header-actions button {
+      background: rgba(255, 255, 255, 0.18);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: #fff;
+      padding: 7px 10px;
+      border-radius: 9px;
+      font-size: 12px;
+      cursor: pointer;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .header-actions button:active { transform: scale(0.95); }
+
+    /* Barra de Datos del Vecino Desplegable */
+    .user-bar-wrapper {
+      background: rgba(248, 250, 252, 0.98);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+      z-index: 15;
+    }
+    .user-bar-toggle {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 12px;
+      font-size: 12.5px;
+      font-weight: 800;
+      color: var(--primary);
+      cursor: pointer;
+      background: #f1f5f9;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .user-status-pill {
+      font-size: 11px;
+      padding: 3px 9px;
+      border-radius: 12px;
+      background: #fef3c7;
+      color: #92400e;
+      font-weight: 800;
+    }
+    .user-status-pill.ok {
+      background: #dcfce7;
+      color: #166534;
+    }
+    .user-bar {
+      padding: 8px 10px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 7px;
+    }
+    .user-bar.collapsed {
+      display: none;
+    }
+    .user-bar input, .user-bar select {
+      width: 100%;
+      padding: 9px 10px;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 9px;
+      font-size: 13px;
+      font-weight: 600;
+      outline: none;
+      background: #fff;
+      color: var(--text-main);
+    }
+    .user-bar input:focus, .user-bar select:focus {
+      border-color: var(--primary);
+    }
+    .user-bar input.filled, .user-bar select.filled {
+      border-color: #10b981;
+      background: #f0fdf4;
+    }
+
+    /* Área de Conversación */
+    .chat-box {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    @keyframes msgAppear {
+      0% { opacity: 0; transform: translateY(10px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+    .msg {
+      max-width: 88%;
+      padding: 11px 14px 8px 14px;
+      border-radius: 14px;
+      font-size: 15px;
+      line-height: 1.48;
+      position: relative;
+      word-wrap: break-word;
+      box-shadow: var(--shadow-sm);
+      animation: msgAppear 0.3s ease forwards;
+    }
+    .msg.bot {
+      align-self: flex-start;
+      background: var(--bot-msg);
+      color: var(--text-main);
+      border-top-left-radius: 4px;
+    }
+    .msg.user {
+      align-self: flex-end;
+      background: var(--user-msg);
+      color: var(--text-main);
+      border-top-right-radius: 4px;
+    }
+
+    .msg code {
+      background: #e6f4f1;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-weight: 800;
+      color: var(--primary);
+      border: 1px dashed rgba(7, 94, 84, 0.4);
+      cursor: pointer;
+      display: inline-block;
+      margin: 2px 0;
+    }
+
+    .gps-chat-card {
+      margin-top: 6px;
+      background: rgba(255, 255, 255, 0.85);
+      border: 1px solid rgba(7, 94, 84, 0.25);
+      border-radius: 8px;
+      padding: 8px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--primary);
+      text-decoration: none;
+    }
+
+    .pdf-chat-card {
+      margin-top: 8px;
+      background: #f0fdfa;
+      border: 1.5px solid #14b8a6;
+      border-radius: 10px;
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 13.5px;
+      font-weight: 800;
+      color: #0f766e;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .msg-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: 6px;
+    }
+    .btn-tts {
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      color: #1e293b;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+    .btn-tts:active { background: #e2e8f0; }
+
+    .msg-meta {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 4px;
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-left: auto;
+    }
+    .checks { color: #53bdeb; font-size: 12px; font-weight: bold; letter-spacing: -2px; }
+
+    /* Burbuja Escribiendo */
+    .typing-bubble {
+      display: none;
+      align-self: flex-start;
+      background: var(--bot-msg);
+      padding: 12px 16px;
+      border-radius: 12px;
+      border-top-left-radius: 3px;
+      box-shadow: var(--shadow-sm);
+      margin: 0 12px 6px 12px;
+      width: fit-content;
+    }
+    .typing-dots { display: flex; align-items: center; gap: 5px; }
+    .typing-dots span {
+      width: 8px; height: 8px; background: #8696a0; border-radius: 50%;
+      animation: typingBounce 1.3s infinite ease-in-out;
+    }
+    .typing-dots span:nth-child(2) { animation-delay: 0.18s; }
+    .typing-dots span:nth-child(3) { animation-delay: 0.36s; }
+    @keyframes typingBounce {
+      0%, 80%, 100% { transform: translateY(0); opacity: 0.45; }
+      40% { transform: translateY(-5px); opacity: 1; }
+    }
+
+    /* Bandeja de Ubicación GPS + Archivos Adjuntos */
+    .attachments-tray {
+      display: none;
+      flex-direction: column;
+      gap: 6px;
+      background: #fefce8;
+      color: #854d0e;
+      padding: 8px 12px;
+      border-top: 1px solid #fde047;
+    }
+    .gps-ready-pill {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      background: #dcfce7;
+      border: 1px solid #86efac;
+      color: #166534;
+      padding: 6px 10px;
+      border-radius: 8px;
+      font-size: 12.5px;
+      font-weight: 700;
+    }
+    .gps-ready-pill button {
+      border: none;
+      background: none;
+      color: #dc2626;
+      font-weight: 800;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .file-preview-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .file-chips-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .file-item-chip {
+      background: #fff;
+      border: 1px solid #facc15;
+      border-radius: 8px;
+      padding: 4px 8px;
+      font-size: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #713f12;
+      font-weight: 600;
+    }
+    .file-thumb {
+      width: 26px;
+      height: 26px;
+      border-radius: 4px;
+      object-fit: cover;
+    }
+    .file-item-chip button {
+      border: none;
+      background: none;
+      color: #dc2626;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    /* Botones rápidos (Chips grandes y legibles) */
+    .quick-Menu {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 9px 11px;
+      background: rgba(255, 255, 255, 0.95);
+      border-top: 1px solid rgba(0, 0, 0, 0.08);
+      scrollbar-width: none;
+    }
+    .quick-Menu::-webkit-scrollbar { display: none; }
+    .chip {
+      white-space: nowrap;
+      background: #fff;
+      color: var(--primary);
+      border: 1.5px solid rgba(7, 94, 84, 0.35);
+      padding: 8px 14px;
+      border-radius: 22px;
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .chip.proy-chip {
+      background: #f0fdfa;
+      border-color: #0d9488;
+      color: #0f766e;
+    }
+    .chip.feria-chip {
+      background: #f5f3ff;
+      border-color: #8b5cf6;
+      color: #5b21b6;
+    }
+    .chip.status-chip {
+      background: #ecfdf5;
+      border-color: #10b981;
+      color: #065f46;
+    }
+    .chip.reclamo-chip {
+      background: #fffbeb;
+      border-color: #f59e0b;
+      color: #b45309;
+    }
+    .chip.urgente-chip {
+      background: #fef2f2;
+      border-color: #ef4444;
+      color: #b91c1c;
+    }
+    .chip:active { transform: scale(0.95); }
+
+    /* Barra inferior estilo WhatsApp */
+    .input-area {
+      background: #f0f2f5;
+      padding: 6px 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      padding-bottom: max(8px, env(safe-area-inset-bottom));
+    }
+
+    .input-capsule {
+      flex: 1;
+      min-width: 0;
+      min-height: 50px;
+      background: #fff;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 25px;
+      display: flex;
+      align-items: center;
+      padding: 2px 6px;
+      gap: 2px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+    .input-capsule:focus-within {
+      border-color: var(--primary);
+    }
+
+    .attach-btn {
+      background: transparent;
+      border: none;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      font-size: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #475569;
+      position: relative;
+      flex-shrink: 0;
+    }
+    .attach-btn:active { background: #e2e8f0; transform: scale(0.9); }
+    .attach-btn.gps-active { background: #dcfce7; color: #166534; }
+
+    .attach-badge {
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      background: var(--primary);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .input-capsule input[type="text"] {
+      flex: 1;
+      min-width: 0;
+      width: 100%;
+      padding: 10px 4px;
+      border: none;
+      font-size: 15.5px;
+      outline: none;
+      background: transparent;
+      color: var(--text-main);
+    }
+
+    .send-btn {
+      background: var(--primary-gradient);
+      color: #fff;
+      border: none;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      font-size: 21px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 2px 6px rgba(7, 94, 84, 0.32);
+    }
+    .send-btn:active { transform: scale(0.92); }
+
+    /* Bottom Sheet Modals */
+    .sheet-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(2px);
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      z-index: 80;
+    }
+    .sheet-overlay.open { display: flex; }
+    .sheet-card {
+      background: #fff;
+      width: 100%;
+      max-height: 92%;
+      border-top-left-radius: 22px;
+      border-top-right-radius: 22px;
+      padding: 18px 16px 24px 16px;
+      overflow-y: auto;
+      box-shadow: 0 -8px 25px rgba(0,0,0,0.25);
+      animation: slideUp 0.25s ease-out;
+    }
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+    .sheet-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .sheet-header h3 { font-size: 17px; color: var(--primary); font-weight: 800; }
+    .sheet-close {
+      border: none;
+      background: #f1f5f9;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      color: #334155;
+    }
+    .form-group { margin-bottom: 12px; }
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 800;
+      color: #1e293b;
+      margin-bottom: 5px;
+    }
+    .form-group select, .form-group input, .form-group textarea {
+      width: 100%;
+      padding: 11px 12px;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 10px;
+      font-size: 15px;
+      outline: none;
+      background: #f8fafc;
+    }
+    .form-group textarea { min-height: 78px; resize: vertical; }
+    .sheet-actions-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .btn-sheet-tool {
+      padding: 11px;
+      border-radius: 10px;
+      border: 1.5px dashed #94a3b8;
+      background: #f8fafc;
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+      color: #1e293b;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .btn-sheet-tool.active-gps {
+      background: #dcfce7;
+      border-color: #16a34a;
+      color: #166534;
+    }
+    .btn-submit-reclamo {
+      width: 100%;
+      padding: 14px;
+      background: var(--primary-gradient);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-size: 15.5px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(7, 94, 84, 0.25);
+    }
+
+    /* ESTILOS DE LA FERIA DIGITAL Y GUÍA DE EMPRENDEDORES (3 PESTAÑAS) */
+    .feria-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 6px;
+      background: #f1f5f9;
+      padding: 5px;
+      border-radius: 12px;
+      margin-bottom: 14px;
+    }
+    .feria-tab-btn {
+      padding: 10px 4px;
+      border: none;
+      border-radius: 9px;
+      font-size: 12.5px;
+      font-weight: 800;
+      cursor: pointer;
+      background: transparent;
+      color: #475569;
+      text-align: center;
+    }
+    .feria-tab-btn.active {
+      background: #ffffff;
+      color: var(--purple);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    }
+    .rubros-grid {
+      display: flex;
+      gap: 7px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+      margin-bottom: 12px;
+      scrollbar-width: none;
+    }
+    .rubros-grid::-webkit-scrollbar { display: none; }
+    .rubro-pill {
+      white-space: nowrap;
+      padding: 8px 13px;
+      border-radius: 18px;
+      border: 1.5px solid #cbd5e1;
+      background: #fff;
+      font-size: 13px;
+      font-weight: 800;
+      color: #334155;
+      cursor: pointer;
+    }
+    .rubro-pill.active {
+      background: #f5f3ff;
+      border-color: #7c3aed;
+      color: #5b21b6;
+    }
+    .emp-card {
+      background: #ffffff;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 13px;
+      margin-bottom: 11px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+    }
+    .emp-card-top {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .emp-photo {
+      width: 64px;
+      height: 64px;
+      border-radius: 12px;
+      object-fit: cover;
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 30px;
+    }
+    .emp-info h4 {
+      font-size: 16px;
+      font-weight: 800;
+      color: #0f172a;
+      margin-bottom: 3px;
+    }
+    .emp-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+    .emp-badge-verif {
+      background: #dcfce7;
+      color: #166534;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 6px;
+    }
+    .emp-badge-barrio {
+      background: #ede9fe;
+      color: #5b21b6;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 6px;
+    }
+    .emp-desc {
+      font-size: 14.5px;
+      color: #1e293b;
+      line-height: 1.45;
+      background: #f8fafc;
+      padding: 9px 11px;
+      border-radius: 9px;
+      margin-bottom: 10px;
+    }
+    .emp-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .btn-wa-emp {
+      flex: 1;
+      background: #16a34a;
+      color: #fff;
+      text-decoration: none;
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 800;
+      text-align: center;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .btn-voice-helper {
+      width: 100%;
+      padding: 11px;
+      margin-bottom: 8px;
+      background: #eff6ff;
+      border: 1.5px dashed #3b82f6;
+      color: #1d4ed8;
+      border-radius: 10px;
+      font-size: 13.5px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    /* Lista de Tickets Guardados */
+    .ticket-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 12px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      margin-bottom: 8px;
+    }
+    .ticket-code { font-weight: 800; color: var(--primary); font-size: 15px; }
+    .ticket-date { font-size: 11.5px; color: #64748b; }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <div class="toast" id="toastMsg">📋 Código copiado</div>
+
+    <!-- MENÚ LATERAL IZQUIERDO DESPLEGABLE (FÁCIL E INTUITIVO) -->
+    <div class="drawer-overlay" id="drawerOverlay" onclick="cerrarMenuLateral()"></div>
+    <aside class="side-drawer" id="sideDrawer">
+      <div class="drawer-header">
+        <div class="drawer-header-left">
+          <div class="avatar" style="width:42px;height:42px;border-radius:50%;background:#fff;color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:22px;">🏛️</div>
+          <div>
+            <div style="font-size:16px;font-weight:800;">Menú</div>
+            <div style="font-size:12px;color:#d1fae5;">Tocá una opción con el dedo</div>
+          </div>
+        </div>
+        <button type="button" class="drawer-close" onclick="cerrarMenuLateral()">✕</button>
+      </div>
+
+      <div class="drawer-body">
+        <div class="drawer-section-title">🚀 Apoyo a Emprendedores y Feria</div>
+
+        <button type="button" class="menu-big-btn proy-highlight" onclick="cerrarMenuLateral(); abrirModalProyecto();">
+          <div class="menu-icon">🚀</div>
+          <div class="menu-text">
+            <strong>Pedir Herramientas o Microcrédito</strong>
+            <span>Armá tu proyecto en 4 pasos para fortalecer tu trabajo</span>
+          </div>
+        </button>
+
+        <button type="button" class="menu-big-btn feria-highlight" onclick="cerrarMenuLateral(); abrirModalFeria('EXPLORAR');">
+          <div class="menu-icon">🛒</div>
+          <div class="menu-text">
+            <strong>Feria y Guía de Oficios</strong>
+            <span>Ver quién vende o trabaja en el pueblo</span>
+          </div>
+        </button>
+
+        <button type="button" class="menu-big-btn feria-highlight" onclick="cerrarMenuLateral(); abrirModalFeria('ANOTARME');">
+          <div class="menu-icon">➕</div>
+          <div class="menu-text">
+            <strong>Anotar mi Emprendimiento</strong>
+            <span>Publicá gratis lo que vendés o tu oficio</span>
+          </div>
+        </button>
+
+        <button type="button" class="menu-big-btn feria-highlight" onclick="cerrarMenuLateral(); abrirModalFeria('EDITAR');">
+          <div class="menu-icon">✏️</div>
+          <div class="menu-text">
+            <strong>Editar mi Emprendimiento</strong>
+            <span>Modificá tus datos de forma segura con tu PIN</span>
+          </div>
+        </button>
+
+        <div class="drawer-section-title">🛠️ Reclamos y Asistencia</div>
+
+        <button type="button" class="menu-big-btn reclamo-highlight" onclick="cerrarMenuLateral(); abrirModalReclamo('OBRAS');">
+          <div class="menu-icon">🛠️</div>
+          <div class="menu-text">
+            <strong>Hacer Reclamo Barrial</strong>
+            <span>Foco quemado, calles, basura o agua</span>
+          </div>
+        </button>
+
+        <button type="button" class="menu-big-btn urgente-highlight" onclick="cerrarMenuLateral(); abrirModalReclamo('SOCIAL');">
+          <div class="menu-icon">🔴</div>
+          <div class="menu-text">
+            <strong>Pedir Asistencia Social</strong>
+            <span>Desarrollo Humano, salud o alimentos</span>
+          </div>
+        </button>
+
+        <button type="button" class="menu-big-btn" onclick="cerrarMenuLateral(); abrirMisTickets();">
+          <div class="menu-icon">🔍</div>
+          <div class="menu-text">
+            <strong>Estado de mi Reclamo o Proyecto</strong>
+            <span>Ver qué respondió la Municipalidad</span>
+          </div>
+        </button>
+
+        <div class="drawer-section-title">📋 Consultas e Información</div>
+
+        <button type="button" class="menu-big-btn" onclick="cerrarMenuLateral(); enviarRapido('¿Qué proyectos presentó el Diputado?');">
+          <div class="menu-icon">🏛️</div>
+          <div class="menu-text">
+            <strong>Proyectos</strong>
+            <span>Conocé las leyes y gestiones</span>
+          </div>
+        </button>
+
+        <button type="button" class="menu-big-btn" onclick="cerrarMenuLateral(); enviarRapido('Necesito información sobre subsidios y becas');">
+          <div class="menu-icon">🤝</div>
+          <div class="menu-text">
+            <strong>Subsidios y Becas</strong>
+            <span>Requisitos e inscripciones abiertas</span>
+          </div>
+        </button>
+
+        <button type="button" class="menu-big-btn" onclick="cerrarMenuLateral(); limpiarChat();">
+          <div class="menu-icon">🗑️</div>
+          <div class="menu-text">
+            <strong>Borrar Todo y Reiniciar</strong>
+            <span>Limpia la charla y tus datos escritos</span>
+          </div>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Header con botón de Menú Izquierdo -->
+    <div class="header">
+      <div class="header-info">
+        <button type="button" class="btn-menu-ham" onclick="abrirMenuLateral()" title="Abrir menú de opciones">
+          ☰
+        </button>
+        <div class="title">
+          <h1>Asistente Ciudadano</h1>
+          <p><span class="online-dot"></span> Intendencia</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button type="button" onclick="abrirMisTickets()" title="Ver mis códigos de reclamo o proyecto">🎫 <span id="badgeMisTickets"></span></button>
+        <button type="button" onclick="limpiarChat()" title="Borrar conversación y todos los datos">🗑️</button>
+      </div>
+    </div>
+
+    <!-- Barra de Datos del Vecino + Selector Oficial de Barrio -->
+    <div class="user-bar-wrapper">
+      <div class="user-bar-toggle" onclick="toggleUserBar()">
+        <span>👤 Mis Datos <small style="font-weight:500;color:#475569;">(Tocá acá para mostrar u ocultar)</small></span>
+        <span class="user-status-pill" id="userStatusPill">Completar datos ▾</span>
+      </div>
+      <div class="user-bar" id="userBarGrid">
+        <input type="text" id="vecinoNombre" placeholder="👤 Tu Nombre y Apellido" oninput="guardarDatosVecino()" />
+        <select id="vecinoBarrio" onchange="guardarDatosVecino()">
+          <option value="">📍 Elegí tu Barrio...</option>
+          <option value="Centro">📍 Barrio Centro</option>
+          <option value="Centro 2">📍 Barrio Centro 2</option>
+          <option value="San Cayetano">📍 Barrio San Cayetano</option>
+          <option value="El Cruce">📍 Barrio El Cruce</option>
+          <option value="Santa Teresita">📍 Barrio Santa Teresita</option>
+          <option value="Luján">📍 Barrio Luján</option>
+          <option value="25 de mayo">📍 Barrio 25 de Mayo</option>
+          <option value="El Bordo">📍 El Bordo</option>
+          <option value="Betania">📍 Betania</option>
+          <option value="Otro Barrio">📍 Otro Barrio / Campo</option>
+        </select>
+        <input type="tel" id="vecinoTelefono" placeholder="📱 Tu Celular (ej: 3875..)" oninput="guardarDatosVecino()" />
+        <input type="password" id="vecinoPin" maxlength="4" inputmode="numeric" placeholder="🔒 PIN Secreto (4 núm)" title="PIN de 4 dígitos para proteger tus reclamos y tu emprendimiento" oninput="guardarDatosVecino()" />
+      </div>
+    </div>
+
+    <!-- Área de Mensajes -->
+    <div class="chat-box" id="chatBox"></div>
+
+    <!-- Indicador Escribiendo -->
+    <div class="typing-bubble" id="typingIndicator">
+      <div class="typing-dots">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+
+    <!-- Bandeja unificada de Ubicación GPS + Archivos Adjuntos -->
+    <div class="attachments-tray" id="attachmentsTray">
+      <div class="gps-ready-pill" id="gpsReadyPill">
+        <span id="gpsReadyText">🛰️ Ubicación GPS exacta adjuntada al mensaje</span>
+        <button type="button" onclick="quitarUbicacionGPS()" title="Quitar ubicación">✕</button>
+      </div>
+      <div id="filePreviewBlock" style="display:none;">
+        <div class="file-preview-header">
+          <span id="fileCountLabel">📎 Archivos adjuntos (0/3)</span>
+          <button type="button" onclick="quitarTodosLosArchivos()" style="border:none;background:none;color:#b91c1c;font-weight:700;cursor:pointer;font-size:12px;">Quitar todos ✕</button>
+        </div>
+        <div class="file-chips-list" id="fileChipsList" style="margin-top:4px;"></div>
+      </div>
+    </div>
+
+    <!-- Menú Rápido Inteligente -->
+    <div class="quick-Menu">
+      <button type="button" class="chip proy-chip" onclick="abrirModalProyecto()">🚀 Pedir Herramientas / Microcrédito</button>
+      <button type="button" class="chip feria-chip" onclick="abrirModalFeria('EXPLORAR')">🛒 Feria y Guía de Oficios</button>
+      <button type="button" class="chip reclamo-chip" onclick="abrirModalReclamo('OBRAS')">🛠️ Hacer Reclamo Barrial</button>
+      <button type="button" class="chip urgente-chip" onclick="abrirModalReclamo('SOCIAL')">🔴 Asistencia Social</button>
+      <button type="button" class="chip status-chip" onclick="abrirBuscadorEstado()">🔍 Estado de mi Reclamo</button>
+      <button type="button" class="chip" onclick="enviarRapido('¿Qué proyectos presentó?')">📋 Proyectos</button>
+      <button type="button" class="chip" onclick="enviarRapido('Necesito información sobre subsidios y becas')">🤝 Subsidios y Becas</button>
+    </div>
+
+    <!-- Barra Inferior de Entrada -->
+    <div class="input-area">
+      <input type="file" id="fileInput" multiple accept="image/*,application/pdf,.pdf,.doc,.docx" style="display:none" onchange="seleccionarArchivos(event)" />
+
+      <div class="input-capsule">
+        <button type="button" class="attach-btn" onclick="abrirSelectorArchivos()" title="Subir Foto o PDF">
+          📎
+          <span class="attach-badge" id="attachBadge">0</span>
+        </button>
+
+        <input type="text" id="userInput" placeholder="Escribí o tocá el micrófono 🎙️..." autocomplete="off" onkeypress="if(event.key==='Enter') enviarMensaje()" />
+
+        <button type="button" class="attach-btn" id="btnGps" onclick="adjuntarUbicacionGPS()" title="Enviar mi ubicación GPS">📍</button>
+        <button type="button" class="attach-btn" id="btnVoz" onclick="dictarPorVoz()" title="Hablar por micrófono">🎙️</button>
+      </div>
+
+      <button type="button" class="send-btn" onclick="enviarMensaje()" title="Enviar mensaje">➤</button>
+    </div>
+
+    <!-- MODAL 1: ASISTENTE GUIADO DE RECLAMO / ASISTENCIA -->
+    <div class="sheet-overlay" id="modalReclamo">
+      <div class="sheet-card">
+        <div class="sheet-header">
+          <h3 id="modalReclamoTitulo">🛠️ Nuevo Reclamo Municipal</h3>
+          <button type="button" class="sheet-close" onclick="cerrarModalReclamo()">✕</button>
+        </div>
+
+        <div class="form-group">
+          <label>1. ¿Qué problema querés reportar?</label>
+          <select id="recTipo">
+            <option value="💡 Alumbrado Público (Foco / Poste / Oscuridad)">💡 Luz / Foco Quemado / Poste</option>
+            <option value="🚧 Calles, Baches o Pavimento">🚧 Calle Rota / Baches / Vereda</option>
+            <option value="🌿 Limpieza, Basura, Poda o Maleza">🌿 Basura / Poda / Yuyos Altos</option>
+            <option value="💧 Agua, Pérdida o Saneamiento">💧 Pérdida de Agua / Cloaca</option>
+            <option value="🤝 Asistencia Social / Desarrollo Humano">🤝 Asistencia Social / Salud / Alimentos</option>
+            <option value="🏛️ Pedido o Nota">🏛️ Pedido / Audiencia</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>2. ¿En qué calle o cerca de dónde es?</label>
+          <input type="text" id="recDireccion" placeholder="Ej: Calle Belgrano al lado de la despensa..." />
+        </div>
+
+        <div class="form-group">
+          <label>3. Contanos qué pasa (Podés usar el micrófono)</label>
+          <button type="button" class="btn-voice-helper" onclick="dictarEnCampo('recDetalle')">🎙️ Tocá acá para contar el problema hablando</button>
+          <textarea id="recDetalle" placeholder="Escribí o hablá contando el problema..."></textarea>
+        </div>
+
+        <div class="sheet-actions-row">
+          <button type="button" class="btn-sheet-tool" id="btnModalGps" onclick="adjuntarUbicacionGPS()">
+            📍 Sumar mi GPS
+          </button>
+          <button type="button" class="btn-sheet-tool" onclick="abrirSelectorArchivos()">
+            📸 Subir Foto / PDF
+          </button>
+        </div>
+
+        <button type="button" class="btn-submit-reclamo" onclick="confirmarEnvioReclamoGuiado()">
+          ✅ Enviar Reclamo Ahora
+        </button>
+      </div>
+    </div>
+
+    <!-- MODAL 2: MIS TICKETS GUARDADOS Y CONSULTA DE ESTADO CON PIN -->
+    <div class="sheet-overlay" id="modalTickets">
+      <div class="sheet-card">
+        <div class="sheet-header">
+          <h3>🎫 Mis Reclamos y Proyectos</h3>
+          <button type="button" class="sheet-close" onclick="cerrarMisTickets()">✕</button>
+        </div>
+        <p style="font-size:13.5px;color:#334155;margin-bottom:10px;">
+          Para cuidar tu privacidad, poné tu <strong>🔒 PIN de 4 números</strong> y tocá tu código para ver si ya fue aprobado o respondido:
+        </p>
+        <div id="listaMisTickets" style="margin-bottom:14px;"></div>
+
+        <div class="form-group">
+          <label>1. Código (#ID o PROY-...) o Tu Número de Celular</label>
+          <input type="text" id="inputCodigoEstado" placeholder="Ej: #A50817, PROY-1234 o tu celular 3875..." />
+        </div>
+        <div class="form-group">
+          <label>2. Tu PIN Secreto (4 números)</label>
+          <input type="password" id="inputPinModalEstado" maxlength="4" inputmode="numeric" placeholder="🔒 Tus 4 números de PIN" />
+        </div>
+        <button type="button" class="btn-submit-reclamo" onclick="consultarCodigoEspecifico()">🔍 Ver Estado Ahora</button>
+      </div>
+    </div>
+
+    <!-- MODAL 3: FERIA DIGITAL Y GUÍA DE EMPRENDEDORES (BUSCAR + ANOTARME + EDITAR EL MÍO CON PIN) -->
+    <div class="sheet-overlay" id="modalFeria">
+      <div class="sheet-card">
+        <div class="sheet-header">
+          <h3>🛒 Feria y Oficios del Pueblo</h3>
+          <button type="button" class="sheet-close" onclick="cerrarModalFeria()">✕</button>
+        </div>
+
+        <div class="feria-tabs">
+          <button type="button" class="feria-tab-btn active" id="tabFeriaExplorar" onclick="cambiarTabFeria('EXPLORAR')">
+            🔍 Buscar
+          </button>
+          <button type="button" class="feria-tab-btn" id="tabFeriaAnotarme" onclick="cambiarTabFeria('ANOTARME')">
+            ➕ Anotarme
+          </button>
+          <button type="button" class="feria-tab-btn" id="tabFeriaEditar" onclick="cambiarTabFeria('EDITAR')">
+            ✏️ Editar el Mío
+          </button>
+        </div>
+
+        <!-- PESTAÑA A: VER GUÍA DE EMPRENDEDORES Y OFICIOS -->
+        <div id="vistaFeriaExplorar">
+          <p style="font-size:13px;color:#475569;margin-bottom:8px;">
+            Tocá un dibujo para ver qué vecinos venden o trabajan en esa área y hablales directo por WhatsApp:
+          </p>
+
+          <div class="rubros-grid">
+            <button type="button" class="rubro-pill active" onclick="filtrarRubroFeria('TODOS', this)">🌟 Todos</button>
+            <button type="button" class="rubro-pill" onclick="filtrarRubroFeria('🥖 Comidas y Pan Casero', this)">🥖 Pan y Comidas</button>
+            <button type="button" class="rubro-pill" onclick="filtrarRubroFeria('🌾 Huerta, Campo y Granja', this)">🌾 Huerta y Campo</button>
+            <button type="button" class="rubro-pill" onclick="filtrarRubroFeria('🧱 Albañil, Plomero y Electricista', this)">🧱 Albañil y Oficios</button>
+            <button type="button" class="rubro-pill" onclick="filtrarRubroFeria('✂️ Costura, Tejido y Artesanías', this)">✂️ Costura y Tejido</button>
+            <button type="button" class="rubro-pill" onclick="filtrarRubroFeria('🚜 Fletes, Poda y Trabajos Rurales', this)">🚜 Fletes y Poda</button>
+            <button type="button" class="rubro-pill" onclick="filtrarRubroFeria('💍 Bijoutería', this)">💍 Bijoutería</button>
+            <button type="button" class="rubro-pill" onclick="filtrarRubroFeria('💇‍♀️ Peluquería', this)">💇‍♀️ Peluquería</button>
+            <button type="button" class="rubro-pill" onclick="filtrarRubroFeria('💅 Belleza cosmética', this)">💅 Belleza cosmética o uñas y pestañas</button>
+          </div>
+
+          <input type="text" id="buscadorFeriaTxt" placeholder="🔍 Escribí qué buscás (ej: pan, huevos, plomero)..." oninput="renderListaEmprendedores()" style="width:100%;padding:10px 12px;border:1.5px solid #cbd5e1;border-radius:10px;font-size:14px;margin-bottom:12px;" />
+
+          <div id="contenedorEmprendedores"></div>
+        </div>
+
+        <!-- PESTAÑA B: ANOTAR MI EMPRENDIMIENTO U OFICIO GRATIS -->
+        <div id="vistaFeriaAnotarme" style="display:none;">
+          <div style="background:#f5f3ff;border:1px solid #c4b5fd;padding:10px 12px;border-radius:10px;font-size:13px;color:#4c1d95;margin-bottom:12px;">
+            🌱 <strong>¡Sumate gratis a la Guía del Pueblo!</strong> Completá qué vendés o qué oficio hacés. El Secretario de Desarrollo Humano lo verificará para que todos los vecinos puedan comprarte o contratarte por WhatsApp.
+          </div>
+
+          <div class="form-group">
+            <label>1. Tu Nombre o Nombre de tu Emprendimiento</label>
+            <input type="text" id="empNombre" placeholder="Ej: Doña Rosa - Pan Casero / Juan Plomero" />
+          </div>
+
+          <div class="form-group">
+            <label>2. ¿De qué Barrio o Zona Rural sos?</label>
+            <select id="empBarrio">
+              <option value="">📍 Elegí tu Barrio...</option>
+              <option value="Centro">📍 Barrio Centro</option>
+              <option value="Centro 2">📍 Barrio Centro 2</option>
+              <option value="San Cayetano">📍 Barrio San Cayetano</option>
+              <option value="El Cruce">📍 Barrio El Cruce</option>
+              <option value="Santa Teresita">📍 Barrio Santa Teresita</option>
+              <option value="Luján">📍 Barrio Luján</option>
+              <option value="25 de mayo">📍 Barrio 25 de Mayo</option>
+              <option value="El Bordo">📍 El Bordo</option>
+              <option value="Betania">📍 Betania</option>
+              <option value="Otro Barrio">📍 Otro Barrio / Campo</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>3. Tu Número de WhatsApp (Para que te hagan pedidos)</label>
+            <input type="tel" id="empTelefono" placeholder="Ej: 3875622260" />
+          </div>
+
+          <div class="form-group">
+            <label>4. Elegí el Rubro de tu Trabajo</label>
+            <select id="empRubro">
+              <option value="🥖 Comidas y Pan Casero">🥖 Comidas, Pan Casero, Tortillas y Repostería</option>
+              <option value="🌾 Huerta, Campo y Granja">🌾 Verduras de la Huerta, Huevos, Quesos y Campo</option>
+              <option value="🧱 Albañil, Plomero y Electricista">🧱 Albañilería, Plomería, Electricidad, Soldadura</option>
+              <option value="✂️ Costura, Tejido y Artesanías">✂️ Costura, Arreglos de Ropa, Tejido y Artesanías</option>
+              <option value="🚜 Fletes, Poda y Trabajos Rurales">🚜 Desmalezado, Poda, Fletes y Trabajos Rurales</option>
+              <option value="💍 Bijoutería">💍 Bijoutería</option>
+              <option value="💇‍♀️ Peluquería">💇‍♀️ Peluquería</option>
+              <option value="💅 Belleza cosmética o uñas y pestañas">💅 Belleza cosmética o uñas y pestañas</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>5. Contá qué vendés o qué trabajo hacés (y precios si querés)</label>
+            <button type="button" class="btn-voice-helper" onclick="dictarEnCampo('empDescripcion')">
+              🎙️ Tocá acá y contá con tu voz qué vendés o hacés
+            </button>
+            <textarea id="empDescripcion" placeholder="Ej: Hago pan casero, tortillas y empanadas todos los días. También hago envíos en el barrio..."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label>6. Elegí un PIN Secreto de 4 números (Para que solo vos puedas editarlo)</label>
+            <input type="password" id="empPinCrear" maxlength="4" inputmode="numeric" placeholder="🔒 Ej: 1234 (Si lo dejás vacío te creamos uno)" />
+          </div>
+
+          <div class="form-group">
+            <label>7. Foto de tu Producto o Trabajo (Opcional)</label>
+            <input type="file" id="empFotoInput" accept="image/*" style="display:none" onchange="procesarFotoEmprendedor(event)" />
+            <button type="button" class="btn-sheet-tool" id="btnSubirFotoEmp" onclick="document.getElementById('empFotoInput').click()" style="width:100%;">
+              📸 Sacar o Subir una Foto de lo que hago
+            </button>
+          </div>
+
+          <button type="button" class="btn-submit-reclamo" id="btnEnviarEmp" onclick="enviarRegistroEmprendedor()" style="background:linear-gradient(135deg, #6d28d9 0%, #4c1d95 100%);">
+            ✅ Enviar para Publicar en la Feria
+          </button>
+        </div>
+
+        <!-- PESTAÑA C: EDITAR MI EMPRENDIMIENTO (PROTEGIDO CON PIN DEL CREADOR) -->
+        <div id="vistaFeriaEditar" style="display:none;">
+          <div id="bloqueLoginEditarEmp">
+            <div style="background:#fef3c7;border:1px solid #fde68a;padding:11px 12px;border-radius:10px;font-size:13px;color:#92400e;margin-bottom:12px;">
+              🔒 <strong>Acceso Privado para el Emprendedor:</strong> Ingresá el número de WhatsApp con el que anotaste tu emprendimiento (o tu código <code>EMP-...</code>) y tu <strong>PIN secreto de 4 números</strong>. Solo vos podés ver y cambiar tus datos.
+            </div>
+
+            <div class="form-group">
+              <label>1. Tu Número de WhatsApp o Código EMP-...</label>
+              <input type="text" id="editEmpBusqueda" placeholder="Ej: 3875622260 o EMP-1A2B3" />
+            </div>
+
+            <div class="form-group">
+              <label>2. Tu PIN Secreto (4 números)</label>
+              <input type="password" id="editEmpPinAcceso" maxlength="4" inputmode="numeric" placeholder="🔒 Tus 4 números de PIN" />
+            </div>
+
+            <button type="button" class="btn-submit-reclamo" id="btnBuscarMiEmp" onclick="buscarMiEmprendimientoConPin()" style="background:linear-gradient(135deg, #075e54 0%, #0a786c 100%);">
+              🔓 Verificar mi PIN y Cargar mis Datos
+            </button>
+          </div>
+
+          <div id="bloqueFormularioEditarEmp" style="display:none;">
+            <div style="background:#dcfce7;border:1px solid #86efac;padding:10px 12px;border-radius:10px;font-size:13px;color:#166534;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;">
+              <span>🔓 <strong>PIN Verificado:</strong> Editá tus datos abajo</span>
+              <button type="button" onclick="volverALoginEditarEmp()" style="border:none;background:#fff;color:#166534;padding:4px 8px;border-radius:6px;font-size:11.5px;font-weight:800;cursor:pointer;">Cambiar cuenta</button>
+            </div>
+
+            <div class="form-group" id="grupoSelectorVariosEmp" style="display:none;">
+              <label>Seleccioná cuál de tus emprendimientos querés editar:</label>
+              <select id="selectMisEmpEncontrados" onchange="cargarEmprendimientoEnFormulario(this.value)"></select>
+            </div>
+
+            <input type="hidden" id="editEmpIdActual" />
+
+            <div class="form-group">
+              <label>1. Tu Nombre o Nombre de tu Emprendimiento</label>
+              <input type="text" id="editEmpNombre" placeholder="Nombre de tu emprendimiento" />
+            </div>
+
+            <div class="form-group">
+              <label>2. Barrio o Zona Rural</label>
+              <select id="editEmpBarrio">
+                          <option value="">📍 Elegí tu Barrio...</option>
+                          <option value="Centro">📍 Barrio Centro</option>
+                          <option value="Centro 2">📍 Barrio Centro 2</option>
+                          <option value="San Cayetano">📍 Barrio San Cayetano</option>
+                          <option value="El Cruce">📍 Barrio El Cruce</option>
+                          <option value="Santa Teresita">📍 Barrio Santa Teresita</option>
+                          <option value="Luján">📍 Barrio Luján</option>
+                          <option value="25 de mayo">📍 Barrio 25 de Mayo</option>
+                          <option value="El Bordo">📍 El Bordo</option>
+                          <option value="Betania">📍 Betania</option>
+                          <option value="Otro Barrio">📍 Otro Barrio / Campo</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>3. Tu Número de WhatsApp</label>
+              <input type="tel" id="editEmpTelefono" placeholder="Ej: 3875622260" />
+            </div>
+
+            <div class="form-group">
+              <label>4. Rubro de tu Trabajo</label>
+              <select id="editEmpRubro">
+                <option value="🥖 Comidas y Pan Casero">🥖 Comidas, Pan Casero, Tortillas y Repostería</option>
+                <option value="🌾 Huerta, Campo y Granja">🌾 Verduras de la Huerta, Huevos, Quesos y Campo</option>
+                <option value="🧱 Albañil, Plomero y Electricista">🧱 Albañilería, Plomería, Electricidad, Soldadura</option>
+                <option value="✂️ Costura, Tejido y Artesanías">✂️ Costura, Arreglos de Ropa, Tejido y Artesanías</option>
+                <option value="🚜 Fletes, Poda y Trabajos Rurales">🚜 Desmalezado, Poda, Fletes y Trabajos Rurales</option>
+                <option value="💍 Bijoutería">💍 Bijoutería</option>
+                <option value="💇‍♀️ Peluquería">💇‍♀️ Peluquería</option>
+                <option value="💅 Belleza cosmética o uñas y pestañas">💅 Belleza cosmética o uñas y pestañas</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>5. Descripción de lo que vendés o hacés</label>
+              <button type="button" class="btn-voice-helper" onclick="dictarEnCampo('editEmpDescripcion')">
+                🎙️ Tocá acá para agregar o corregir hablando con tu voz
+              </button>
+              <textarea id="editEmpDescripcion" placeholder="Describí tus productos, servicios o precios..."></textarea>
+            </div>
+
+            <div class="form-group">
+              <label>6. Cambiar Foto de tu Producto o Trabajo (Opcional)</label>
+              <input type="file" id="editEmpFotoInput" accept="image/*" style="display:none" onchange="procesarFotoEditarEmprendedor(event)" />
+              <button type="button" class="btn-sheet-tool" id="btnSubirFotoEditEmp" onclick="document.getElementById('editEmpFotoInput').click()" style="width:100%;">
+                📸 Cambiar Foto (Dejar igual si no subís otra)
+              </button>
+            </div>
+
+            <button type="button" class="btn-submit-reclamo" id="btnGuardarEdicionEmp" onclick="guardarCambiosMiEmprendimiento()" style="background:linear-gradient(135deg, #6d28d9 0%, #4c1d95 100%);">
+              💾 Guardar Todos Mis Cambios
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL 4: ARMADOR DE PROYECTOS PRODUCTIVOS CON IA (MICROCRÉDITOS / BANCO DE HERRAMIENTAS) -->
+    <div class="sheet-overlay" id="modalProyecto">
+      <div class="sheet-card">
+        <div class="sheet-header">
+          <h3 style="color:#0f766e;">🚀 Pedir Herramientas o Microcrédito</h3>
+          <button type="button" class="sheet-close" onclick="cerrarModalProyecto()">✕</button>
+        </div>
+
+        <div style="background:#f0fdfa;border:1.5px solid #5eead4;padding:11px 12px;border-radius:12px;font-size:13.5px;color:#115e59;margin-bottom:14px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+            <strong>🌱 Fortalecimiento de Emprendedores</strong>
+            <button type="button" class="btn-tts" onclick="escucharTexto(this, 'Respondé estas 4 preguntas sencillas, escribiendo o hablando con el micrófono. El sistema armará sola tu carpeta técnica en PDF para que Desarrollo Humano evalúe entregarte las herramientas, materiales o microcrédito.')">🔊 Escuchar ayuda</button>
+          </div>
+          Respondé estas <strong>4 preguntas sencillas</strong> (podés hablar con el micrófono 🎙️) y nuestra Inteligencia Artificial armará tu <strong>Carpeta Técnica en PDF</strong> para Desarrollo Humano.
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+          <div class="form-group" style="margin-bottom:0;">
+            <label>👤 Tu Nombre y Apellido</label>
+            <input type="text" id="proyNombre" placeholder="Ej: María López" />
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label>📱 Tu WhatsApp</label>
+            <input type="tel" id="proyTelefono" placeholder="Ej: 3875..." />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>📍 ¿De qué Barrio o Zona Rural sos?</label>
+          <select id="proyBarrio">
+                      <option value="">📍 Elegí tu Barrio...</option>
+                      <option value="Centro">📍 Barrio Centro</option>
+                      <option value="Centro 2">📍 Barrio Centro 2</option>
+                      <option value="San Cayetano">📍 Barrio San Cayetano</option>
+                      <option value="El Cruce">📍 Barrio El Cruce</option>
+                      <option value="Santa Teresita">📍 Barrio Santa Teresita</option>
+                      <option value="Luján">📍 Barrio Luján</option>
+                      <option value="25 de mayo">📍 Barrio 25 de Mayo</option>
+                      <option value="El Bordo">📍 El Bordo</option>
+                      <option value="Betania">📍 Betania</option>
+                      <option value="Otro Barrio">📍 Otro Barrio / Campo</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>1️⃣ ¿De qué es tu emprendimiento o idea de trabajo?</label>
+          <select id="proyRubro">
+            <option value="🥖 Panadería, Cocina o Comidas">🥖 Panadería, Repostería, Tortillas o Comidas</option>
+            <option value="🌾 Huerta, Campo o Cría de Animales">🌾 Huerta, Agricultura Familiar o Cría de Animales</option>
+            <option value="🧱 Albañilería, Soldadura, Plomería o Carpintería">🧱 Albañilería, Soldadura, Carpintería, Bloques o Electricidad</option>
+            <option value="✂️ Costura, Tejido o Artesanías">✂️ Costura, Tejido, Marroquinería o Artesanías</option>
+            <option value="🚜 Desmalezado, Poda o Servicios">🚜 Desmalezado, Jardinería, Peluquería o Servicios</option>
+            <option value="🏪 Kiosco, Almacén o Comercio Barrial">🏪 Pequeño Kiosco, Despensa o Venta Barrial</option>
+            <option value="💍 Bijoutería">💍 Bijoutería</option>
+            <option value="💇‍♀️ Peluquería">💇‍♀️ Peluquería</option>
+            <option value="💅 Belleza cosmética o uñas y pestañas">💅 Belleza cosmética o uñas y pestañas</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>2️⃣ ¿En qué etapa está hoy tu trabajo?</label>
+          <select id="proyEtapa">
+            <option value="Ya está funcionando y quiero producir más">🟢 Ya estoy trabajando en esto y quiero producir más</option>
+            <option value="Recién estoy empezando y necesito un empujón">🌱 Recién estoy empezando y necesito fortalecimiento</option>
+            <option value="Tengo el oficio aprendido pero me faltan las herramientas">💡 Sé hacer el oficio, pero no tengo las herramientas para arrancar</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>3️⃣ ¿Qué herramientas, materiales o microcrédito necesitás y para qué los usarías?</label>
+          <button type="button" class="btn-voice-helper" onclick="dictarEnCampo('proyNecesidad')">
+            🎙️ Tocá acá y contá con tu voz qué herramientas o materiales necesitás
+          </button>
+          <textarea id="proyNecesidad" placeholder="Ej: Necesito un horno pizzero y una amasadora chica, o bolsas de harina, porque hoy horneo en cocina prestada y quiero vender más pan en mi barrio..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>4️⃣ ¿Cuántas personas de tu familia trabajan o viven de este emprendimiento?</label>
+          <select id="proyFamilia">
+            <option value="1 a 2 personas del hogar">👨‍👩‍👧 1 a 2 personas de mi familia</option>
+            <option value="3 a 4 personas del hogar">👨‍👩‍👧‍👦 3 a 4 personas de mi familia</option>
+            <option value="5 o más personas del hogar (Familia numerosa)">🏠 5 o más personas de mi familia</option>
+            <option value="Soy jefa/jefe de hogar a cargo de hijos menores">👩‍👧‍👦 Jefa/Jefe de hogar con hijos a cargo</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>📸 Foto de lo que hacés o de tu lugar de trabajo (Opcional)</label>
+          <input type="file" id="proyFotoInput" accept="image/*" style="display:none" onchange="procesarFotoProyecto(event)" />
+          <button type="button" class="btn-sheet-tool" id="btnSubirFotoProy" onclick="document.getElementById('proyFotoInput').click()" style="width:100%;">
+            📸 Sacar o Subir una Foto de mi trabajo
+          </button>
+        </div>
+
+        <button type="button" class="btn-submit-reclamo" id="btnEnviarProyecto" onclick="enviarProyectoProductivo()" style="background:linear-gradient(135deg, #0d9488 0%, #0f766e 100%);">
+          🚀 Armar mi Carpeta Técnica en PDF y Enviar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // URL de tu implementación de Google Apps Script
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyVNJosYYBbuYVLxNAP0hRw8wqNOnDDu6OQzXS4NYIOJoZSxPqNVtYbOxpcl68eViY/exec';
+
+    const MAX_ARCHIVOS = 3;
+    let historialChat = JSON.parse(localStorage.getItem('muni_chat_hist') || '[]');
+    let misTickets = JSON.parse(localStorage.getItem('muni_mis_tickets') || '[]');
+    let archivosActuales = [];
+    let gpsActualUrl = null;
+
+    // Estado de la Feria Digital y Proyectos Productivos
+    let listaEmprendedoresPublicos = [];
+    let misEmprendimientosVerificados = [];
+    let rubroFeriaSeleccionado = 'TODOS';
+    let fotoEmprendedorTmp = null;
+    let fotoEditarEmprendedorTmp = null;
+    let fotoProyectoTmp = null;
+
+    const pausa = (ms) => new Promise(res => setTimeout(res, ms));
+
+    window.onload = () => {
+      document.getElementById('vecinoNombre').value = localStorage.getItem('muni_vecino_nombre') || '';
+      document.getElementById('vecinoBarrio').value = localStorage.getItem('muni_vecino_barrio') || '';
+      document.getElementById('vecinoTelefono').value = localStorage.getItem('muni_vecino_tel') || '';
+      document.getElementById('vecinoPin').value = localStorage.getItem('muni_vecino_pin') || '';
+      actualizarEstiloInputs();
+      actualizarBadgeTickets();
+      mostrarBienvenidaOHistorial();
+    };
+
+    // Funciones del Menú Lateral Izquierdo
+    function abrirMenuLateral() {
+      document.getElementById('drawerOverlay').classList.add('open');
+      document.getElementById('sideDrawer').classList.add('open');
+    }
+
+    function cerrarMenuLateral() {
+      document.getElementById('drawerOverlay').classList.remove('open');
+      document.getElementById('sideDrawer').classList.remove('open');
+    }
+
+    function toggleUserBar() {
+      document.getElementById('userBarGrid').classList.toggle('collapsed');
+    }
+
+    function actualizarEstiloInputs() {
+      const inpNombre = document.getElementById('vecinoNombre');
+      const selBarrio = document.getElementById('vecinoBarrio');
+      const inpTel = document.getElementById('vecinoTelefono');
+      const inpPin = document.getElementById('vecinoPin');
+      const pill = document.getElementById('userStatusPill');
+
+      const okNom = inpNombre.value.trim().length > 2;
+      const okBar = selBarrio.value.trim().length > 0;
+      const okTel = inpTel.value.trim().length > 6;
+      const okPin = inpPin.value.trim().length === 4;
+
+      inpNombre.classList.toggle('filled', okNom);
+      selBarrio.classList.toggle('filled', okBar);
+      inpTel.classList.toggle('filled', okTel);
+      inpPin.classList.toggle('filled', okPin);
+
+      if (okNom && okBar && okTel) {
+        pill.textContent = `✅ ${selBarrio.value} • Listo`;
+        pill.classList.add('ok');
+      } else {
+        pill.textContent = '✏️ Completar ▾';
+        pill.classList.remove('ok');
+      }
+    }
+
+    function guardarDatosVecino() {
+      const pinLimpio = document.getElementById('vecinoPin').value.replace(/\D/g, '').substring(0, 4);
+      document.getElementById('vecinoPin').value = pinLimpio;
+      localStorage.setItem('muni_vecino_nombre', document.getElementById('vecinoNombre').value.trim());
+      localStorage.setItem('muni_vecino_barrio', document.getElementById('vecinoBarrio').value);
+      localStorage.setItem('muni_vecino_tel', document.getElementById('vecinoTelefono').value.trim());
+      localStorage.setItem('muni_vecino_pin', pinLimpio);
+      actualizarEstiloInputs();
+    }
+
+    function mostrarToast(texto) {
+      const toast = document.getElementById('toastMsg');
+      toast.textContent = texto;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2800);
+    }
+
+    function registrarTicketLocal(codigo) {
+      const limpio = codigo.replace('#', '').toUpperCase();
+      if (limpio.length < 5) return;
+      if (!misTickets.some(t => t.id === limpio)) {
+        misTickets.unshift({
+          id: limpio,
+          fecha: new Date().toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
+        });
+        if (misTickets.length > 8) misTickets = misTickets.slice(0, 8);
+        localStorage.setItem('muni_mis_tickets', JSON.stringify(misTickets));
+        actualizarBadgeTickets();
+      }
+    }
+
+    function actualizarBadgeTickets() {
+      const b = document.getElementById('badgeMisTickets');
+      b.textContent = misTickets.length > 0 ? `(${misTickets.length})` : '';
+    }
+
+    function copiarCodigoTicket(codigo) {
+      if (navigator.clipboard) navigator.clipboard.writeText(codigo);
+      if (codigo.length === 4 && /^\d{4}$/.test(codigo)) {
+        document.getElementById('vecinoPin').value = codigo;
+        guardarDatosVecino();
+        mostrarToast(`🔒 PIN ${codigo} guardado en tu barra de seguridad`);
+      } else if (/^EMP-/i.test(codigo)) {
+        localStorage.setItem('muni_mi_emp_id', codigo.toUpperCase());
+        mostrarToast(`📋 Código ${codigo} guardado para editar tu emprendimiento`);
+      } else {
+        registrarTicketLocal(codigo);
+        document.getElementById('userInput').value = `Quiero consultar el estado de mi reclamo ${codigo}`;
+        mostrarToast(`📋 Código ${codigo} copiado. Tocá Enviar ➤ para ver su estado.`);
+      }
+    }
+
+    function escucharTexto(btn, textoPlano) {
+      if (!('speechSynthesis' in window)) {
+        mostrarToast('⚠️ Tu celular no soporta lectura por voz');
+        return;
+      }
+      window.speechSynthesis.cancel();
+      const limpio = String(textoPlano).replace(/[*_`#]/g, '');
+      const utter = new SpeechSynthesisUtterance(limpio);
+      utter.lang = 'es-AR';
+      utter.rate = 0.98;
+      if (btn) btn.textContent = '🔊 Hablando...';
+      utter.onend = () => { if (btn) btn.textContent = '🔊 Escuchar'; };
+      window.speechSynthesis.speak(utter);
+    }
+
+    async function mostrarBienvenidaOHistorial() {
+      if (historialChat.length === 0) {
+        await pausa(180);
+        agregarMensajeUI(
+          'bot',
+          '¡Hola vecino! 👋 Bienvenido al canal oficial de el equipo de trabajo de la **Municipalidad**.\n\n' +
+          '• Tocá el botón **☰** arriba a la izquierda para ver todas las opciones que tenés disponibles.\n' +
+          '• Tocá **🚀 Solicitar Herramientas / Microcrédito** si tenés un emprendimiento u oficio y necesitás apoyo de Desarrollo Humano.\n' +
+          '• Tocá **🛒 Feria y Guía de Oficios** para comprar o publicar lo que hacés en el pueblo.\n\n' + 
+
+          'Además también podés:\n' +
+          '• Consultar el estado de tus reclamos o trámites con el código que te dieron (ej: `#A1B2C3` o `PROY-1234`).\n' +
+          '• Enviar fotos, documentos o tu ubicación GPS para que el municipio pueda ayudarte mejor.\n\n' +
+          'En caso de que no encontrés tu opción o tengas problemas técnicos, escribinos al 3875-622260 y te ayudamos a resolverlo.\n\n' +
+          '⚠️ Recordá que este chat es solo para consultas y trámites con el  municipio.'
+        );
+      } else {
+        for (let i = 0; i < historialChat.length; i++) {
+          const m = historialChat[i];
+          agregarMensajeUI(m.rol === 'Ciudadano' ? 'user' : 'bot', m.texto, false);
+          await pausa(30);
+        }
+      }
+    }
+
+    function formatearTexto(texto) {
+      const matches = String(texto).match(/(?:#[A-Z0-9]{5,8}|PROY-[A-Z0-9]{4,6})/gi);
+      if (matches) matches.forEach(m => registrarTicketLocal(m));
+
+      return String(texto)
+        .replace(/\[📍\s*Ubicación GPS:\s*(https?:\/\/[^\]]+)\]/gi, '<a href="$1" target="_blank" class="gps-chat-card"><span>🛰️ Ubicación GPS exacta enviada</span><span>Ver mapa ↗</span></a>')
+        .replace(/\[📄\s*Carpeta PDF:\s*(https?:\/\/[^\]]+)\]/gi, '<a href="$1" target="_blank" class="pdf-chat-card"><span>📄 Ver / Descargar mi Carpeta Técnica (PDF)</span><span>Abrir ↗</span></a>')
+        .replace(/`(#?[A-Z0-9\-]{4,12})`/gi, '<code onclick="copiarCodigoTicket(\'$1\')" title="Tocar para copiar">$1 📋</code>')
+        .replace(/`(.*?)`/g, '<code>$1</code>')
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
+        .replace(/\n/g, '<br>');
+    }
+
+    function scrollSuaveAlFinal() {
+      const box = document.getElementById('chatBox');
+      requestAnimationFrame(() => {
+        box.scrollTo({ top: box.scrollHeight, behavior: 'smooth' });
+      });
+    }
+
+    function agregarMensajeUI(tipo, texto, guardar = true) {
+      const box = document.getElementById('chatBox');
+      const div = document.createElement('div');
+      div.className = `msg ${tipo}`;
+      const hora = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const tilde = tipo === 'user' ? '<span class="checks">✓✓</span>' : '';
+      const textoSinSaltos = String(texto).replace(/['"\n]/g, ' ');
+      const btnAudio = tipo === 'bot'
+        ? `<button type="button" class="btn-tts" onclick="escucharTexto(this, '${textoSinSaltos}')">🔊 Escuchar</button>`
+        : '<span></span>';
+
+      div.innerHTML = `
+        <div>${formatearTexto(texto)}</div>
+        <div class="msg-footer">
+          ${btnAudio}
+          <div class="msg-meta"><span>${hora}</span>${tilde}</div>
+        </div>
+      `;
+      box.appendChild(div);
+      scrollSuaveAlFinal();
+
+      if (guardar) {
+        historialChat.push({ rol: tipo === 'user' ? 'Ciudadano' : 'Asistente', texto: texto });
+        if (historialChat.length > 12) historialChat = historialChat.slice(-12);
+        localStorage.setItem('muni_chat_hist', JSON.stringify(historialChat));
+      }
+    }
+
+    function actualizarBandejaAdjuntos() {
+      const tray = document.getElementById('attachmentsTray');
+      const gpsPill = document.getElementById('gpsReadyPill');
+      const fileBlock = document.getElementById('filePreviewBlock');
+      const chipsList = document.getElementById('fileChipsList');
+      const countLabel = document.getElementById('fileCountLabel');
+      const badge = document.getElementById('attachBadge');
+      const btnGps = document.getElementById('btnGps');
+      const btnModalGps = document.getElementById('btnModalGps');
+
+      const hayGps = Boolean(gpsActualUrl);
+      const hayArchivos = archivosActuales.length > 0;
+
+      tray.style.display = (hayGps || hayArchivos) ? 'flex' : 'none';
+      gpsPill.style.display = hayGps ? 'flex' : 'none';
+      btnGps.classList.toggle('gps-active', hayGps);
+
+      if (btnModalGps) {
+        btnModalGps.classList.toggle('active-gps', hayGps);
+        btnModalGps.innerHTML = hayGps ? '✅ Ubicación GPS Lista' : '📍 Sumar mi GPS';
+      }
+
+      if (!hayArchivos) {
+        fileBlock.style.display = 'none';
+        badge.style.display = 'none';
+      } else {
+        fileBlock.style.display = 'block';
+        badge.style.display = 'flex';
+        badge.textContent = archivosActuales.length;
+        countLabel.textContent = `📎 Archivos listos (${archivosActuales.length}/${MAX_ARCHIVOS})`;
+
+        chipsList.innerHTML = archivosActuales.map((a, idx) => `
+          <div class="file-item-chip">
+            ${a.previewUrl ? `<img src="${a.previewUrl}" class="file-thumb" alt="Foto" />` : `<span>${a.icono}</span>`}
+            <span>${a.fileName}</span>
+            <button type="button" onclick="quitarUnArchivo(${idx})" title="Quitar archivo">✕</button>
+          </div>
+        `).join('');
+      }
+    }
+
+    function abrirSelectorArchivos() {
+      if (archivosActuales.length >= MAX_ARCHIVOS) {
+        mostrarToast('⚠️ Ya adjuntaste el máximo de 3 archivos permitidos');
+        return;
+      }
+      document.getElementById('fileInput').click();
+    }
+
+    async function seleccionarArchivos(e) {
+      const files = Array.from(e.target.files || []);
+      if (files.length === 0) return;
+
+      const disponibles = MAX_ARCHIVOS - archivosActuales.length;
+      const archivosAProcesar = files.slice(0, disponibles);
+
+      for (const file of archivosAProcesar) {
+        if (file.size > 15 * 1024 * 1024) {
+          mostrarToast(`⚠️ ${file.name} supera los 15 MB`);
+          continue;
+        }
+        const procesado = await procesarUnArchivo(file);
+        if (procesado && archivosActuales.length < MAX_ARCHIVOS) {
+          archivosActuales.push(procesado);
+        }
+      }
+
+      document.getElementById('fileInput').value = '';
+      actualizarBandejaAdjuntos();
+      mostrarToast('📎 Archivo adjuntado correctamente');
+    }
+
+    function procesarUnArchivo(file) {
+      return new Promise((resolve) => {
+        if (file.type.startsWith('image/')) {
+          const reader = new FileReader();
+          reader.onload = function(evt) {
+            const img = new Image();
+            img.onload = function() {
+              const canvas = document.createElement('canvas');
+              const MAX_WIDTH = 1000;
+              let width = img.width;
+              let height = img.height;
+              if (width > MAX_WIDTH) {
+                height = Math.round((height * MAX_WIDTH) / width);
+                width = MAX_WIDTH;
+              }
+              canvas.width = width;
+              canvas.height = height;
+              canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+              const dataUrl = canvas.toDataURL('image/jpeg', 0.74);
+              resolve({
+                fileName: file.name.replace(/\.[^/.]+$/, "") + ".jpg",
+                mimeType: 'image/jpeg',
+                fileBase64: dataUrl.split(',')[1],
+                previewUrl: dataUrl,
+                icono: '🖼️'
+              });
+            };
+            img.src = evt.target.result;
+          };
+          reader.readAsDataURL(file);
+        } else {
+          const reader = new FileReader();
+          reader.onload = function(evt) {
+            const mimeDetectado = file.type || (file.name.toLowerCase().endsWith('.pdf') ? 'application/pdf' : 'application/octet-stream');
+            resolve({
+              fileName: file.name,
+              mimeType: mimeDetectado,
+              fileBase64: evt.target.result.split(',')[1],
+              previewUrl: null,
+              icono: '📄'
+            });
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+    }
+
+    function quitarUnArchivo(index) {
+      archivosActuales.splice(index, 1);
+      actualizarBandejaAdjuntos();
+    }
+
+    function quitarTodosLosArchivos() {
+      archivosActuales = [];
+      document.getElementById('fileInput').value = '';
+      actualizarBandejaAdjuntos();
+    }
+
+    function adjuntarUbicacionGPS() {
+      if (!navigator.geolocation) {
+        mostrarToast('⚠️ Tu navegador no soporta ubicación GPS');
+        return;
+      }
+      mostrarToast('🛰️ Obteniendo coordenadas GPS de tu celular...');
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const lat = pos.coords.latitude.toFixed(6);
+          const lng = pos.coords.longitude.toFixed(6);
+          gpsActualUrl = `https://maps.google.com/?q=${lat},${lng}`;
+          actualizarBandejaAdjuntos();
+          mostrarToast('📍 ¡Ubicación GPS lista para enviar!');
+        },
+        () => mostrarToast('⚠️ Activá el permiso de Ubicación en tu celular para usar el GPS'),
+        { enableHighAccuracy: true, timeout: 9000 }
+      );
+    }
+
+    function quitarUbicacionGPS() {
+      gpsActualUrl = null;
+      actualizarBandejaAdjuntos();
+    }
+
+    // =========================================================================
+    // MÓDULO NUEVO: ARMADOR DE PROYECTOS PRODUCTIVOS CON IA (MICROCRÉDITOS / HERRAMIENTAS)
+    // =========================================================================
+    function abrirModalProyecto() {
+      const nomVec = document.getElementById('vecinoNombre').value.trim();
+      const barVec = document.getElementById('vecinoBarrio').value;
+      const telVec = document.getElementById('vecinoTelefono').value.trim();
+
+      if (nomVec && !document.getElementById('proyNombre').value) document.getElementById('proyNombre').value = nomVec;
+      if (barVec) document.getElementById('proyBarrio').value = barVec;
+      if (telVec && !document.getElementById('proyTelefono').value) document.getElementById('proyTelefono').value = telVec;
+
+      document.getElementById('modalProyecto').classList.add('open');
+    }
+
+    function cerrarModalProyecto() {
+      document.getElementById('modalProyecto').classList.remove('open');
+    }
+
+    async function procesarFotoProyecto(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const procesado = await procesarUnArchivo(file);
+      if (procesado) {
+        fotoProyectoTmp = procesado;
+        const btn = document.getElementById('btnSubirFotoProy');
+        btn.innerHTML = `✅ Foto lista: ${procesado.fileName}`;
+        btn.classList.add('active-gps');
+        mostrarToast('📸 Foto del proyecto cargada correctamente');
+      }
+    }
+
+    async function enviarProyectoProductivo() {
+      const nombre = document.getElementById('proyNombre').value.trim();
+      const telefono = document.getElementById('proyTelefono').value.trim();
+      const barrio = document.getElementById('proyBarrio').value;
+      const rubro = document.getElementById('proyRubro').value;
+      const etapa = document.getElementById('proyEtapa').value;
+      const necesidad = document.getElementById('proyNecesidad').value.trim();
+      const familia = document.getElementById('proyFamilia').value;
+      const pinVec = document.getElementById('vecinoPin').value.trim();
+
+      if (!nombre || !telefono || !necesidad) {
+        mostrarToast('⚠️ Completá tu Nombre, tu WhatsApp y contanos qué herramientas o materiales necesitás');
+        return;
+      }
+
+      // Sincronizamos con la barra superior del vecino
+      document.getElementById('vecinoNombre').value = nombre;
+      document.getElementById('vecinoBarrio').value = barrio;
+      document.getElementById('vecinoTelefono').value = telefono;
+      guardarDatosVecino();
+
+      const btn = document.getElementById('btnEnviarProyecto');
+      btn.disabled = true;
+      btn.textContent = '⏳ Redactando tu Carpeta Técnica con IA...';
+
+      const resumenUsuario = `🚀 *Solicitud de Proyecto Productivo (${rubro})*\n• *Etapa:* ${etapa}\n• *Solicitud:* ${necesidad}\n• *Impacto familiar:* ${familia}`;
+
+      cerrarModalProyecto();
+      agregarMensajeUI('user', resumenUsuario, true);
+
+      const typing = document.getElementById('typingIndicator');
+      typing.style.display = 'block';
+      scrollSuaveAlFinal();
+
+      try {
+        const res = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            accion: 'presentarProyectoProductivo',
+            nombre: nombre,
+            telefono: telefono,
+            barrio: barrio,
+            pinVecino: pinVec,
+            rubro: rubro,
+            etapa: etapa,
+            necesidad: necesidad,
+            familia: familia,
+            fotoBase64: fotoProyectoTmp ? fotoProyectoTmp.fileBase64 : null,
+            fotoNombre: fotoProyectoTmp ? fotoProyectoTmp.fileName : null,
+            fotoMime: fotoProyectoTmp ? fotoProyectoTmp.mimeType : null
+          }),
+          redirect: 'follow'
+        });
+
+        const data = await res.json();
+        typing.style.display = 'none';
+
+        if (data.pinAsignado) {
+          document.getElementById('vecinoPin').value = data.pinAsignado;
+          guardarDatosVecino();
+        }
+        if (data.id) {
+          registrarTicketLocal(data.id);
+        }
+
+        document.getElementById('proyNecesidad').value = '';
+        fotoProyectoTmp = null;
+        const btnFoto = document.getElementById('btnSubirFotoProy');
+        btnFoto.innerHTML = '📸 Sacar o Subir una Foto de mi trabajo';
+        btnFoto.classList.remove('active-gps');
+
+        agregarMensajeUI('bot', data.respuesta || `🎉 ¡Felicitaciones **${nombre}**! Tu proyecto productivo ya fue redactado en PDF y enviado a la Secretaría de Desarrollo Humano.`);
+      } catch (err) {
+        typing.style.display = 'none';
+        agregarMensajeUI('bot', '⚠️ Hubo una demora en la conexión. Por favor intentá enviar tu proyecto nuevamente.');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '🚀 Armar mi Carpeta Técnica en PDF y Enviar';
+      }
+    }
+
+    // =========================================================================
+    // MÓDULO FERIA DIGITAL Y GUÍA DE EMPRENDEDORES (EXPLORAR + ANOTARME + EDITAR)
+    // =========================================================================
+    function abrirModalFeria(tabInicial) {
+      const nomVec = document.getElementById('vecinoNombre').value.trim();
+      const barVec = document.getElementById('vecinoBarrio').value;
+      const telVec = document.getElementById('vecinoTelefono').value.trim();
+      const pinVec = document.getElementById('vecinoPin').value.trim();
+      const idEmpGuardado = localStorage.getItem('muni_mi_emp_id') || '';
+
+      if (nomVec && !document.getElementById('empNombre').value) document.getElementById('empNombre').value = nomVec;
+      if (barVec) document.getElementById('empBarrio').value = barVec;
+      if (telVec && !document.getElementById('empTelefono').value) document.getElementById('empTelefono').value = telVec;
+      if (pinVec && !document.getElementById('empPinCrear').value) document.getElementById('empPinCrear').value = pinVec;
+
+      if (!document.getElementById('editEmpBusqueda').value) {
+        document.getElementById('editEmpBusqueda').value = telVec || idEmpGuardado || '';
+      }
+      if (pinVec && !document.getElementById('editEmpPinAcceso').value) {
+        document.getElementById('editEmpPinAcceso').value = pinVec;
+      }
+
+      document.getElementById('modalFeria').classList.add('open');
+      cambiarTabFeria(tabInicial || 'EXPLORAR');
+      cargarEmprendedoresDelPueblo();
+    }
+
+    function cerrarModalFeria() {
+      document.getElementById('modalFeria').classList.remove('open');
+    }
+
+    function cambiarTabFeria(tab) {
+      document.getElementById('vistaFeriaExplorar').style.display = tab === 'EXPLORAR' ? 'block' : 'none';
+      document.getElementById('vistaFeriaAnotarme').style.display = tab === 'ANOTARME' ? 'block' : 'none';
+      document.getElementById('vistaFeriaEditar').style.display = tab === 'EDITAR' ? 'block' : 'none';
+
+      document.getElementById('tabFeriaExplorar').classList.toggle('active', tab === 'EXPLORAR');
+      document.getElementById('tabFeriaAnotarme').classList.toggle('active', tab === 'ANOTARME');
+      document.getElementById('tabFeriaEditar').classList.toggle('active', tab === 'EDITAR');
+    }
+
+    async function cargarEmprendedoresDelPueblo() {
+      const cont = document.getElementById('contenedorEmprendedores');
+      cont.innerHTML = '<div style="text-align:center;padding:24px;color:#64748b;font-weight:700;">⏳ Cargando emprendedores y oficios del pueblo...</div>';
+      try {
+        const res = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ accion: 'listarEmprendedoresPublico' }),
+          redirect: 'follow'
+        });
+        const data = await res.json();
+        listaEmprendedoresPublicos = data.emprendedores || [];
+        renderListaEmprendedores();
+      } catch (e) {
+        cont.innerHTML = '<div style="text-align:center;padding:20px;color:#dc2626;">⚠️ No se pudo cargar la guía en este momento.</div>';
+      }
+    }
+
+    function filtrarRubroFeria(rubro, btnEl) {
+      rubroFeriaSeleccionado = rubro;
+      document.querySelectorAll('.rubro-pill').forEach(b => b.classList.remove('active'));
+      if (btnEl) btnEl.classList.add('active');
+      renderListaEmprendedores();
+    }
+
+    function renderListaEmprendedores() {
+      const cont = document.getElementById('contenedorEmprendedores');
+      const busq = (document.getElementById('buscadorFeriaTxt').value || '').toLowerCase().trim();
+
+      const filtrados = listaEmprendedoresPublicos.filter(item => {
+        if (rubroFeriaSeleccionado !== 'TODOS' && item.rubro !== rubroFeriaSeleccionado) return false;
+        if (busq) {
+          const combo = `${item.nombre} ${item.barrio} ${item.rubro} ${item.descripcion}`.toLowerCase();
+          if (!combo.includes(busq)) return false;
+        }
+        return true;
+      });
+
+      if (filtrados.length === 0) {
+        cont.innerHTML = `
+          <div style="text-align:center;padding:22px;background:#f8fafc;border-radius:14px;border:1.5px dashed #cbd5e1;">
+            <div style="font-size:32px;margin-bottom:6px;">🌱</div>
+            <div style="font-size:14.5px;font-weight:800;color:#1e293b;">Todavía no hay vecinos anotados en este rubro</div>
+            <p style="font-size:13px;color:#475569;margin:6px 0 12px 0;">¿Vos vendés algo o trabajás de este oficio en el pueblo?</p>
+            <button type="button" class="chip feria-chip" onclick="cambiarTabFeria('ANOTARME')">➕ Anotarme primero gratis</button>
+          </div>
+        `;
+        return;
+      }
+
+      cont.innerHTML = filtrados.map(emp => {
+        const iconoRubro = String(emp.rubro || '🛒').split(' ')[0] || '🛒';
+        const htmlFoto = (emp.foto && emp.foto.startsWith('http'))
+          ? `<img src="${emp.foto}" class="emp-photo" alt="${emp.nombre}" onclick="window.open('${emp.foto}', '_blank')" />`
+          : `<div class="emp-photo">${iconoRubro}</div>`;
+
+        let telLimpio = String(emp.telefono || '').replace(/\D/g, '');
+        if (telLimpio && !telLimpio.startsWith('54')) {
+          telLimpio = '549' + telLimpio.replace(/^0+/, '').replace(/^15/, '');
+        }
+        const msgWa = encodeURIComponent(`¡Hola ${emp.nombre}! 👋 Vi tu publicación en la Feria Digital de la Municipalidad (${emp.rubro}) y te escribo para consultarte por lo que ofrecés.`);
+        const linkWa = `https://wa.me/${telLimpio}?text=${msgWa}`;
+        const textoAudio = `${emp.nombre}, del barrio ${emp.barrio}. Rubro: ${emp.rubro}. Ofrece: ${emp.descripcion}`.replace(/['"\n]/g, ' ');
+
+        return `
+          <div class="emp-card">
+            <div class="emp-card-top">
+              ${htmlFoto}
+              <div class="emp-info">
+                <h4>${emp.nombre}</h4>
+                <div class="emp-badges">
+                  <span class="emp-badge-verif">✅ Emprendedor Verificado</span>
+                  <span class="emp-badge-barrio">📍 ${emp.barrio}</span>
+                </div>
+                <div style="font-size:12px;color:#475569;margin-top:3px;font-weight:700;">${emp.rubro}</div>
+              </div>
+            </div>
+            <div class="emp-desc">${emp.descripcion}</div>
+            <div class="emp-actions">
+              <button type="button" class="btn-tts" onclick="escucharTexto(this, '${textoAudio}')" style="padding:9px 12px;font-size:13px;">🔊 Escuchar</button>
+              <a href="${linkWa}" target="_blank" class="btn-wa-emp">📲 Hablar por WhatsApp</a>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function procesarFotoEmprendedor(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const procesado = await procesarUnArchivo(file);
+      if (procesado) {
+        fotoEmprendedorTmp = procesado;
+        const btn = document.getElementById('btnSubirFotoEmp');
+        btn.innerHTML = `✅ Foto lista: ${procesado.fileName}`;
+        btn.classList.add('active-gps');
+        mostrarToast('📸 Foto de tu emprendimiento cargada');
+      }
+    }
+
+    async function enviarRegistroEmprendedor() {
+      const nombre = document.getElementById('empNombre').value.trim();
+      const barrio = document.getElementById('empBarrio').value;
+      const telefono = document.getElementById('empTelefono').value.trim();
+      const rubro = document.getElementById('empRubro').value;
+      const descripcion = document.getElementById('empDescripcion').value.trim();
+      const pinElegido = document.getElementById('empPinCrear').value.replace(/\D/g, '').substring(0, 4);
+
+      if (!nombre || !telefono || !descripcion) {
+        mostrarToast('⚠️ Completá tu Nombre, tu WhatsApp y qué vendés o hacés');
+        return;
+      }
+
+      const btn = document.getElementById('btnEnviarEmp');
+      btn.disabled = true;
+      btn.textContent = '⏳ Enviando tu emprendimiento...';
+
+      try {
+        const res = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            accion: 'registrarEmprendedor',
+            nombre: nombre,
+            barrio: barrio,
+            telefono: telefono,
+            rubro: rubro,
+            descripcion: descripcion,
+            pinVecino: pinElegido || document.getElementById('vecinoPin').value.trim(),
+            fotoBase64: fotoEmprendedorTmp ? fotoEmprendedorTmp.fileBase64 : null,
+            fotoNombre: fotoEmprendedorTmp ? fotoEmprendedorTmp.fileName : null,
+            fotoMime: fotoEmprendedorTmp ? fotoEmprendedorTmp.mimeType : null
+          }),
+          redirect: 'follow'
+        });
+        const data = await res.json();
+
+        if (data.id) {
+          localStorage.setItem('muni_mi_emp_id', data.id);
+        }
+        if (data.pinAsignado) {
+          document.getElementById('vecinoPin').value = data.pinAsignado;
+          document.getElementById('editEmpPinAcceso').value = data.pinAsignado;
+        }
+        if (telefono) {
+          document.getElementById('vecinoTelefono').value = telefono;
+          document.getElementById('editEmpBusqueda').value = telefono;
+        }
+        if (nombre && !document.getElementById('vecinoNombre').value) {
+          document.getElementById('vecinoNombre').value = nombre;
+        }
+        guardarDatosVecino();
+
+        document.getElementById('empDescripcion').value = '';
+        fotoEmprendedorTmp = null;
+        const btnFoto = document.getElementById('btnSubirFotoEmp');
+        btnFoto.innerHTML = '📸 Sacar o Subir una Foto de lo que hago';
+        btnFoto.classList.remove('active-gps');
+
+        cerrarModalFeria();
+        agregarMensajeUI('bot', data.respuesta || `🎉 ¡Felicitaciones **${nombre}**! Ya recibimos los datos de tu emprendimiento.`);
+      } catch (e) {
+        mostrarToast('⚠️ Error de conexión. Intentá de nuevo.');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '✅ Enviar para Publicar en la Feria';
+      }
+    }
+
+    // =========================================================================
+    // FUNCIONES DE EDICIÓN SEGURA DEL EMPRENDEDOR (CON VALIDACIÓN DE PIN)
+    // =========================================================================
+    function volverALoginEditarEmp() {
+      document.getElementById('bloqueFormularioEditarEmp').style.display = 'none';
+      document.getElementById('bloqueLoginEditarEmp').style.display = 'block';
+    }
+
+    async function buscarMiEmprendimientoConPin() {
+      const busqueda = document.getElementById('editEmpBusqueda').value.trim();
+      const pin = document.getElementById('editEmpPinAcceso').value.replace(/\D/g, '').substring(0, 4);
+
+      if (!busqueda || pin.length !== 4) {
+        mostrarToast('⚠️ Ingresá tu WhatsApp (o código EMP-...) y tu PIN de 4 números');
+        return;
+      }
+
+      const btn = document.getElementById('btnBuscarMiEmp');
+      btn.disabled = true;
+      btn.textContent = '⏳ Verificando tu PIN de seguridad...';
+
+      try {
+        const res = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            accion: 'buscarMiEmprendimientoConPin',
+            busqueda: busqueda,
+            pin: pin
+          }),
+          redirect: 'follow'
+        });
+        const data = await res.json();
+
+        if (data.status === 'success' && data.emprendimientos && data.emprendimientos.length > 0) {
+          misEmprendimientosVerificados = data.emprendimientos;
+          document.getElementById('vecinoPin').value = pin;
+          guardarDatosVecino();
+
+          const selGrupo = document.getElementById('grupoSelectorVariosEmp');
+          const sel = document.getElementById('selectMisEmpEncontrados');
+
+          if (misEmprendimientosVerificados.length > 1) {
+            selGrupo.style.display = 'block';
+            sel.innerHTML = misEmprendimientosVerificados.map((e, idx) =>
+              `<option value="${idx}">${e.nombre} (${e.id} - ${e.rubro})</option>`
+            ).join('');
+          } else {
+            selGrupo.style.display = 'none';
+          }
+
+          cargarEmprendimientoEnFormulario(0);
+          document.getElementById('bloqueLoginEditarEmp').style.display = 'none';
+          document.getElementById('bloqueFormularioEditarEmp').style.display = 'block';
+          mostrarToast('🔓 PIN verificado correctamente');
+        } else {
+          mostrarToast(data.mensaje || '⛔ No se pudo verificar tu PIN o no encontramos el emprendimiento');
+        }
+      } catch (e) {
+        mostrarToast('⚠️ Error de conexión al verificar tus datos');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '🔓 Verificar mi PIN y Cargar mis Datos';
+      }
+    }
+
+    function cargarEmprendimientoEnFormulario(indice) {
+      const emp = misEmprendimientosVerificados[Number(indice)];
+      if (!emp) return;
+
+      document.getElementById('editEmpIdActual').value = emp.id;
+      document.getElementById('editEmpNombre').value = emp.nombre || '';
+      document.getElementById('editEmpTelefono').value = emp.telefono || '';
+      document.getElementById('editEmpDescripcion').value = emp.descripcion || '';
+
+      const selBarrio = document.getElementById('editEmpBarrio');
+      if (emp.barrio) {
+        if (!Array.from(selBarrio.options).some(o => o.value === emp.barrio)) {
+          selBarrio.add(new Option('📍 ' + emp.barrio, emp.barrio));
+        }
+        selBarrio.value = emp.barrio;
+      }
+
+      const selRubro = document.getElementById('editEmpRubro');
+      if (emp.rubro) {
+        if (!Array.from(selRubro.options).some(o => o.value === emp.rubro)) {
+          selRubro.add(new Option(emp.rubro, emp.rubro));
+        }
+        selRubro.value = emp.rubro;
+      }
+
+      fotoEditarEmprendedorTmp = null;
+      const btnFoto = document.getElementById('btnSubirFotoEditEmp');
+      btnFoto.innerHTML = '📸 Cambiar Foto (Dejar igual si no subís otra)';
+      btnFoto.classList.remove('active-gps');
+    }
+
+    async function procesarFotoEditarEmprendedor(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const procesado = await procesarUnArchivo(file);
+      if (procesado) {
+        fotoEditarEmprendedorTmp = procesado;
+        const btn = document.getElementById('btnSubirFotoEditEmp');
+        btn.innerHTML = `✅ Nueva foto lista: ${procesado.fileName}`;
+        btn.classList.add('active-gps');
+        mostrarToast('📸 Nueva foto lista para guardar');
+      }
+    }
+
+    async function guardarCambiosMiEmprendimiento() {
+      const idEmp = document.getElementById('editEmpIdActual').value.trim();
+      const pin = document.getElementById('editEmpPinAcceso').value.replace(/\D/g, '').substring(0, 4);
+      const nombre = document.getElementById('editEmpNombre').value.trim();
+      const barrio = document.getElementById('editEmpBarrio').value;
+      const telefono = document.getElementById('editEmpTelefono').value.trim();
+      const rubro = document.getElementById('editEmpRubro').value;
+      const descripcion = document.getElementById('editEmpDescripcion').value.trim();
+
+      if (!nombre || !telefono || !descripcion) {
+        mostrarToast('⚠️ Tu Nombre, tu WhatsApp y la Descripción no pueden quedar vacíos');
+        return;
+      }
+
+      const btn = document.getElementById('btnGuardarEdicionEmp');
+      btn.disabled = true;
+      btn.textContent = '⏳ Guardando tus cambios...';
+
+      try {
+        const res = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            accion: 'editarMiEmprendimientoVecino',
+            id: idEmp,
+            pin: pin,
+            nombre: nombre,
+            barrio: barrio,
+            telefono: telefono,
+            rubro: rubro,
+            descripcion: descripcion,
+            fotoBase64: fotoEditarEmprendedorTmp ? fotoEditarEmprendedorTmp.fileBase64 : null,
+            fotoNombre: fotoEditarEmprendedorTmp ? fotoEditarEmprendedorTmp.fileName : null,
+            fotoMime: fotoEditarEmprendedorTmp ? fotoEditarEmprendedorTmp.mimeType : null
+          }),
+          redirect: 'follow'
+        });
+        const data = await res.json();
+
+        if (data.status === 'success') {
+          mostrarToast('✅ ¡Tus datos fueron actualizados!');
+          volverALoginEditarEmp();
+          cerrarModalFeria();
+          agregarMensajeUI('bot', data.respuesta || `✅ ¡Listo **${nombre}**! Todos los cambios de tu emprendimiento fueron guardados correctamente.`);
+        } else {
+          mostrarToast(data.mensaje || '⚠️ No se pudieron guardar los cambios');
+        }
+      } catch (e) {
+        mostrarToast('⚠️ Error de conexión al guardar cambios');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '💾 Guardar Todos Mis Cambios';
+      }
+    }
+
+    // Dictado por voz para cualquier campo de texto de los formularios
+    function dictarEnCampo(idCampo) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        mostrarToast('⚠️ Tu celular no soporta dictado por voz');
+        return;
+      }
+      const recognition = new SpeechRecognition();
+      recognition.lang = 'es-AR';
+      recognition.interimResults = false;
+      mostrarToast('🎙️ Escuchando... Hablá ahora bien claro');
+
+      recognition.onresult = (event) => {
+        const textoHablado = event.results[0][0].transcript;
+        const campo = document.getElementById(idCampo);
+        if (campo) {
+          campo.value = (campo.value ? campo.value + ' ' : '') + textoHablado;
+          mostrarToast('✅ Texto escrito con tu voz');
+        }
+      };
+      recognition.start();
+    }
+
+    // =========================================================================
+    // MODALES DE RECLAMOS Y TICKETS
+    // =========================================================================
+    function abrirModalReclamo(modo) {
+      const modal = document.getElementById('modalReclamo');
+      const titulo = document.getElementById('modalReclamoTitulo');
+      const selectTipo = document.getElementById('recTipo');
+
+      if (modo === 'SOCIAL') {
+        titulo.textContent = '🔴 Solicitud de Desarrollo Humano';
+        selectTipo.value = '🤝 Asistencia Social / Desarrollo Humano';
+      } else {
+        titulo.textContent = '🛠️ Nuevo Reclamo Barrial';
+        selectTipo.selectedIndex = 0;
+      }
+      modal.classList.add('open');
+    }
+
+    function cerrarModalReclamo() {
+      document.getElementById('modalReclamo').classList.remove('open');
+    }
+
+    function confirmarEnvioReclamoGuiado() {
+      const tipo = document.getElementById('recTipo').value;
+      const dir = document.getElementById('recDireccion').value.trim();
+      const det = document.getElementById('recDetalle').value.trim();
+      const barrioSel = document.getElementById('vecinoBarrio').value;
+
+      if (!dir && !det) {
+        mostrarToast('⚠️ Por favor indicá la calle o el detalle del problema');
+        return;
+      }
+
+      const partes = [
+        `Reclamo de ${tipo}.`,
+        barrioSel ? `Barrio ${barrioSel}.` : '',
+        dir ? `Dirección: ${dir}.` : '',
+        det ? `Detalle: ${det}` : ''
+      ].filter(Boolean).join(' ');
+
+      document.getElementById('recDireccion').value = '';
+      document.getElementById('recDetalle').value = '';
+      cerrarModalReclamo();
+
+      document.getElementById('userInput').value = partes;
+      enviarMensaje();
+    }
+
+    function abrirMisTickets() {
+      document.getElementById('inputPinModalEstado').value = document.getElementById('vecinoPin').value;
+      const cont = document.getElementById('listaMisTickets');
+      if (misTickets.length === 0) {
+        cont.innerHTML = '<div style="padding:12px;background:#f8fafc;border-radius:10px;font-size:13px;color:#64748b;text-align:center;">Aún no tenés códigos guardados en este celular. Podés buscar abajo con tu código o celular + PIN.</div>';
+      } else {
+        cont.innerHTML = misTickets.map(t => `
+          <div class="ticket-item">
+            <div>
+              <div class="ticket-code">${t.id.startsWith('PROY-') ? t.id : '#' + t.id}</div>
+              <div class="ticket-date">Registrado: ${t.fecha}</div>
+            </div>
+            <button type="button" class="chip status-chip" onclick="consultarTicketDirecto('${t.id}')">🔍 Ver Estado</button>
+          </div>
+        `).join('');
+      }
+      document.getElementById('modalTickets').classList.add('open');
+    }
+
+    function cerrarMisTickets() {
+      document.getElementById('modalTickets').classList.remove('open');
+    }
+
+    function abrirBuscadorEstado() {
+      abrirMisTickets();
+    }
+
+    function consultarTicketDirecto(id) {
+      const pinModal = document.getElementById('inputPinModalEstado').value.replace(/\D/g, '').substring(0, 4);
+      if (pinModal) {
+        document.getElementById('vecinoPin').value = pinModal;
+        guardarDatosVecino();
+      }
+      cerrarMisTickets();
+      const prefijo = id.startsWith('PROY-') ? id : `#${id}`;
+      enviarRapido(`Quiero consultar el estado de mi reclamo ${prefijo}`);
+    }
+
+    function consultarCodigoEspecifico() {
+      const val = document.getElementById('inputCodigoEstado').value.trim();
+      const pinModal = document.getElementById('inputPinModalEstado').value.replace(/\D/g, '').substring(0, 4);
+      if (!val) return mostrarToast('⚠️ Ingresá tu código o tu número de celular');
+      if (pinModal) {
+        document.getElementById('vecinoPin').value = pinModal;
+        guardarDatosVecino();
+      }
+      cerrarMisTickets();
+      enviarRapido(`Quiero consultar el estado de mi reclamo ${val}`);
+    }
+
+    function enviarRapido(texto) {
+      document.getElementById('userInput').value = texto;
+      enviarMensaje();
+    }
+
+    function dictarPorVoz() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        mostrarToast('⚠️ Tu navegador no soporta dictado por voz');
+        return;
+      }
+      const recognition = new SpeechRecognition();
+      recognition.lang = 'es-AR';
+      recognition.interimResults = false;
+      const btn = document.getElementById('btnVoz');
+      btn.style.background = '#fee2e2';
+      mostrarToast('🎙️ Escuchando... Hablá ahora');
+
+      recognition.onresult = (event) => {
+        const textoHablado = event.results[0][0].transcript;
+        const input = document.getElementById('userInput');
+        input.value = (input.value ? input.value + ' ' : '') + textoHablado;
+      };
+      recognition.onend = () => { btn.style.background = 'transparent'; };
+      recognition.onerror = () => { btn.style.background = 'transparent'; };
+      recognition.start();
+    }
+
+    async function enviarMensaje() {
+      const input = document.getElementById('userInput');
+      let texto = input.value.trim();
+      if (!texto && archivosActuales.length === 0 && !gpsActualUrl) return;
+
+      const nombreVec = document.getElementById('vecinoNombre').value.trim() || 'Vecino';
+      const barrioVec = document.getElementById('vecinoBarrio').value.trim();
+      const telVec = document.getElementById('vecinoTelefono').value.trim() || 'Web';
+      const pinVec = document.getElementById('vecinoPin').value.trim();
+
+      let textoParaServidor = texto || 'Envío de documentación / ubicación adjunta';
+      if (gpsActualUrl) {
+        textoParaServidor += ` [📍 Ubicación GPS: ${gpsActualUrl}]`;
+      }
+
+      const histPrevio = historialChat.slice(-5);
+      const copiaArchivos = [...archivosActuales];
+
+      const etiquetaAdjuntos = copiaArchivos.length > 0
+        ? `\n📎 *Adjunto(s):* ${copiaArchivos.map(a => a.fileName).join(', ')}`
+        : '';
+      const etiquetaGps = gpsActualUrl ? `\n[📍 Ubicación GPS: ${gpsActualUrl}]` : '';
+
+      const mensajeMostrar = `${texto || 'Envío de archivo / ubicación'}${etiquetaAdjuntos}${etiquetaGps}`;
+
+      agregarMensajeUI('user', mensajeMostrar, true);
+      input.value = '';
+      quitarTodosLosArchivos();
+      quitarUbicacionGPS();
+
+      await pausa(140);
+      const typing = document.getElementById('typingIndicator');
+      typing.style.display = 'block';
+      scrollSuaveAlFinal();
+
+      const inicioPeticion = Date.now();
+
+      const payload = {
+        pregunta: textoParaServidor,
+        nombre: nombreVec,
+        barrio: barrioVec,
+        telefono: telVec,
+        pinVecino: pinVec,
+        historial: histPrevio,
+        archivos: copiaArchivos
+      };
+
+      try {
+        const res = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(payload),
+          redirect: 'follow'
+        });
+        const data = await res.json();
+
+        if (data.pinAsignado) {
+          document.getElementById('vecinoPin').value = data.pinAsignado;
+          guardarDatosVecino();
+        }
+
+        const transcurrido = Date.now() - inicioPeticion;
+        if (transcurrido < 420) await pausa(420 - transcurrido);
+
+        typing.style.display = 'none';
+        agregarMensajeUI('bot', data.respuesta || '¡Muchas gracias! Tu consulta fue procesada.');
+      } catch (err) {
+        await pausa(300);
+        typing.style.display = 'none';
+        agregarMensajeUI('bot', '⚠️ Hubo una demora en la conexión con el servidor. Por favor intentá enviar tu mensaje nuevamente.');
+      }
+    }
+
+    // LIMPIEZA TOTAL: Borra conversación, tickets guardados Y TODOS los campos de contacto
+    function limpiarChat() {
+      if (!confirm('¿Querés borrar toda la conversación y limpiar todos tus datos de contacto de la pantalla?')) {
+        return;
+      }
+
+      localStorage.removeItem('muni_chat_hist');
+      localStorage.removeItem('muni_vecino_nombre');
+      localStorage.removeItem('muni_vecino_barrio');
+      localStorage.removeItem('muni_vecino_tel');
+      localStorage.removeItem('muni_vecino_pin');
+      localStorage.removeItem('muni_mis_tickets');
+      localStorage.removeItem('muni_mi_emp_id');
+
+      document.getElementById('vecinoNombre').value = '';
+      document.getElementById('vecinoBarrio').value = '';
+      document.getElementById('vecinoTelefono').value = '';
+      document.getElementById('vecinoPin').value = '';
+      document.getElementById('userInput').value = '';
+      document.getElementById('recDireccion').value = '';
+      document.getElementById('recDetalle').value = '';
+      document.getElementById('inputCodigoEstado').value = '';
+      document.getElementById('inputPinModalEstado').value = '';
+      document.getElementById('empNombre').value = '';
+      document.getElementById('empTelefono').value = '';
+      document.getElementById('empDescripcion').value = '';
+      document.getElementById('empPinCrear').value = '';
+      document.getElementById('editEmpBusqueda').value = '';
+      document.getElementById('editEmpPinAcceso').value = '';
+      document.getElementById('proyNombre').value = '';
+      document.getElementById('proyTelefono').value = '';
+      document.getElementById('proyNecesidad').value = '';
+      volverALoginEditarEmp();
+
+      historialChat = [];
+      misTickets = [];
+      misEmprendimientosVerificados = [];
+      quitarTodosLosArchivos();
+      quitarUbicacionGPS();
+      actualizarEstiloInputs();
+      actualizarBadgeTickets();
+
+      document.getElementById('chatBox').innerHTML = '';
+      mostrarToast('✨ Conversación y datos de contacto eliminados');
+      mostrarBienvenidaOHistorial();
+    }
+  </script>
+</body>
+</html>

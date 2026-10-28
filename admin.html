@@ -1,0 +1,1854 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MuniGestor - Operaciones, Proyectos, Feria y Estadísticas</title>
+  <style>
+    :root {
+      --primary: #0f172a;
+      --accent: #2563eb;
+      --accent-hover: #1d4ed8;
+      --teal: #075e54;
+      --teal-proy: #0d9488;
+      --purple: #6d28d9;
+      --bg: #f1f5f9;
+      --card: #ffffff;
+      --card-sub: #f8fafc;
+      --border: #e2e8f0;
+      --text: #0f172a;
+      --muted: #64748b;
+      --red: #ef4444;
+      --amber: #f59e0b;
+      --green: #10b981;
+      --shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+    }
+
+    body.dark-mode {
+      --primary: #f8fafc;
+      --bg: #0b1120;
+      --card: #1e293b;
+      --card-sub: #0f172a;
+      --border: #334155;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif; }
+    body { background: var(--bg); color: var(--text); padding-bottom: 60px; transition: background 0.25s, color 0.25s; }
+
+    /* Login */
+    #loginScreen {
+      position: fixed; inset: 0; background: linear-gradient(135deg, #075e54, #0f172a);
+      display: flex; align-items: center; justify-content: center; z-index: 100; padding: 20px;
+    }
+    .login-card { background: #fff; color: #0f172a; padding: 32px; border-radius: 18px; width: 100%; max-width: 380px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.35); }
+    .login-card h2 { margin-bottom: 6px; font-size: 23px; color: var(--teal); font-weight: 800; }
+    .login-card p { font-size: 13px; color: #64748b; margin-bottom: 20px; }
+    .login-card input, .login-card select {
+      width: 100%; padding: 12px 14px; margin-bottom: 14px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 14.5px; outline: none; background: #f8fafc; color: #0f172a;
+    }
+    .login-card input:focus, .login-card select:focus { border-color: var(--teal); background: #fff; }
+    .login-card button {
+      width: 100%; padding: 13px; background: var(--teal); color: #fff; border: none; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; transition: 0.2s;
+    }
+    .login-card button:hover { filter: brightness(1.08); }
+
+    /* Topbar */
+    .topbar {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: #fff;
+      padding: 12px 24px; display: flex; justify-content: space-between; align-items: center;
+      position: sticky; top: 0; z-index: 50; box-shadow: 0 2px 12px rgba(0,0,0,0.18); flex-wrap: wrap; gap: 12px;
+    }
+    .topbar-left h1 { font-size: 18px; font-weight: 800; letter-spacing: -0.2px; display: flex; align-items: center; gap: 8px; }
+    .topbar-meta { font-size: 12px; color: #cbd5e1; margin-top: 2px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .sync-pill { background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 12px; font-size: 11px; }
+    .btn-top {
+      background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2);
+      color: #fff; padding: 8px 13px; border-radius: 8px; cursor: pointer; font-size: 12.5px; font-weight: 600; transition: 0.2s;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .btn-top:hover { background: rgba(255,255,255,0.24); }
+
+    .container { max-width: 1260px; margin: 20px auto; padding: 0 16px; }
+
+    /* KPIs Interactivos */
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(175px, 1fr)); gap: 12px; margin-bottom: 18px; }
+    .kpi {
+      background: var(--card); padding: 16px 18px; border-radius: 14px; border: 1.5px solid var(--border);
+      cursor: pointer; transition: all 0.2s ease; box-shadow: var(--shadow); position: relative; overflow: hidden;
+    }
+    .kpi:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.08); }
+    .kpi.active-kpi { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15); }
+    .kpi-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+    .kpi-num { font-size: 28px; font-weight: 800; line-height: 1; }
+    .kpi-pct { font-size: 11.5px; font-weight: 700; padding: 3px 7px; border-radius: 20px; background: var(--card-sub); color: var(--muted); }
+    .kpi-label { font-size: 12.5px; color: var(--muted); font-weight: 700; display: flex; align-items: center; gap: 6px; }
+
+    .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+    .dot-red { background: #ef4444; box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.25); }
+    .dot-amber { background: #f59e0b; box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.25); }
+    .dot-green { background: #10b981; box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.25); }
+
+    /* Selector de Vistas y Herramientas */
+    .nav-tabs {
+      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 16px;
+    }
+    .tab-group {
+      display: inline-flex; background: var(--border); padding: 4px; border-radius: 12px; gap: 4px; flex-wrap: wrap;
+    }
+    .tab-btn {
+      border: none; background: transparent; padding: 9px 15px; border-radius: 9px;
+      font-size: 13px; font-weight: 700; color: var(--muted); cursor: pointer; transition: all 0.2s;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .tab-btn.active {
+      background: var(--card); color: var(--text); box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    }
+    .badge-pend-emp {
+      background: #ef4444; color: #fff; font-size: 11px; font-weight: 800; padding: 2px 7px; border-radius: 10px;
+    }
+    .toolbar-right { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .btn-export {
+      background: var(--card); border: 1px solid var(--border); color: var(--text);
+      padding: 9px 14px; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 6px; box-shadow: var(--shadow); transition: 0.15s;
+    }
+    .btn-export:hover { border-color: var(--accent); }
+    .btn-export.active-view { background: #eff6ff; border-color: var(--accent); color: var(--accent); }
+
+    /* SECCIONES OCULTAS POR DEFECTO */
+    #vistaReportes, #vistaEmprendedores, #vistaProyectos { display: none; margin-bottom: 24px; animation: fadeIn 0.25s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+    .reports-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 16px; margin-bottom: 18px;
+    }
+    .report-card {
+      background: var(--card); border-radius: 14px; border: 1px solid var(--border);
+      padding: 18px; box-shadow: var(--shadow);
+    }
+    .report-card h3 {
+      font-size: 15px; font-weight: 800; margin-bottom: 4px; display: flex; align-items: center; justify-content: space-between;
+    }
+    .report-sub { font-size: 12px; color: var(--muted); margin-bottom: 14px; }
+
+    .stat-row { margin-bottom: 11px; cursor: pointer; padding: 6px 8px; border-radius: 8px; transition: background 0.15s; }
+    .stat-row:hover { background: var(--card-sub); }
+    .stat-label-line { display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; margin-bottom: 5px; }
+    .stat-bar-bg { width: 100%; height: 9px; background: var(--border); border-radius: 10px; overflow: hidden; }
+    .stat-bar-fill { height: 100%; border-radius: 10px; transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1); }
+
+    /* Tabla de Ranking de Vecinos */
+    .table-wrap { overflow-x: auto; }
+    .neighbors-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .neighbors-table th {
+      text-align: left; padding: 10px 12px; background: var(--card-sub); color: var(--muted);
+      font-weight: 700; font-size: 11.5px; text-transform: uppercase; border-bottom: 1px solid var(--border);
+    }
+    .neighbors-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    .neighbors-table tr:hover { background: var(--card-sub); }
+    .pill-count {
+      background: #dbeafe; color: #1e40af; font-weight: 800; padding: 3px 9px; border-radius: 12px; font-size: 12px;
+    }
+
+    /* Barra de Filtros Mejorada */
+    .filters-wrapper {
+      background: var(--card); padding: 14px; border-radius: 14px; border: 1px solid var(--border);
+      margin-bottom: 16px; box-shadow: var(--shadow);
+    }
+    .filters {
+      display: grid; grid-template-columns: 1.5fr repeat(4, minmax(150px, 1fr)); gap: 10px; align-items: center;
+    }
+    @media (max-width: 1024px) {
+      .filters { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+    }
+    .filters input, .filters select {
+      padding: 10px 12px; border: 1px solid var(--border); border-radius: 9px;
+      font-size: 13.5px; width: 100%; outline: none; background: var(--card-sub); color: var(--text);
+      transition: border 0.2s;
+    }
+    .filters input:focus, .filters select:focus { border-color: var(--accent); background: var(--card); }
+
+    .filter-status-bar {
+      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;
+      gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border); font-size: 12.5px; color: var(--muted);
+    }
+    .btn-clear-filters {
+      background: #fee2e2; color: #b91c1c; border: none; padding: 4px 10px; border-radius: 6px;
+      font-size: 12px; font-weight: 700; cursor: pointer; display: none;
+    }
+
+    /* Grilla de Tarjetas */
+    .claims { display: grid; grid-template-columns: 1fr; gap: 14px; }
+    .claims.compact-grid { grid-template-columns: repeat(auto-fill, minmax(520px, 1fr)); }
+    @media (max-width: 640px) { .claims.compact-grid { grid-template-columns: 1fr; } }
+
+    .card {
+      background: var(--card); border-radius: 14px; border: 1px solid var(--border);
+      padding: 16px 18px; border-left: 5px solid #cbd5e1; box-shadow: var(--shadow);
+      transition: transform 0.15s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+    .card.urgente { border-left-color: var(--red); }
+    .card.gestion { border-left-color: var(--amber); }
+    .card.resuelto { border-left-color: var(--green); opacity: 0.92; }
+    .card.emp-card-admin { border-left-color: var(--purple); }
+    .card.proy-card-admin { border-left-color: var(--teal-proy); }
+    .card.unsaved-changes {
+      border-color: var(--amber);
+      box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+    }
+
+    .card-header {
+      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;
+      gap: 8px; margin-bottom: 10px; font-size: 12.5px; color: var(--muted);
+    }
+    .badge-id {
+      padding: 4px 9px; border-radius: 6px; font-weight: 800; font-size: 12px;
+      background: #e2e8f0; color: #0f172a; cursor: pointer; transition: 0.15s;
+      display: inline-flex; align-items: center; gap: 4px;
+    }
+    .badge-id:hover { background: #cbd5e1; }
+    .badge-barrio { background: #ede9fe; color: #5b21b6; font-weight: 700; padding: 4px 9px; border-radius: 6px; font-size: 12px; }
+    .badge-prio {
+      padding: 4px 10px; border-radius: 6px; font-weight: 800; font-size: 11.5px;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .prio-urg { background: #fee2e2; color: #991b1b; }
+    .prio-ges { background: #fef3c7; color: #92400e; }
+    .prio-inf { background: #dcfce7; color: #166534; }
+    .prio-visita { background: #dbeafe; color: #1e40af; }
+    .time-ago { font-weight: 600; color: var(--muted); background: var(--card-sub); padding: 3px 8px; border-radius: 6px; border: 1px solid var(--border); }
+
+    .card-body {
+      font-size: 14.5px; margin-bottom: 12px; line-height: 1.5; background: var(--card-sub);
+      padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border); color: var(--text);
+    }
+
+    .attachments-box { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; align-items: center; }
+    .att-link {
+      font-size: 12px; font-weight: 700; color: var(--accent); background: #eff6ff;
+      padding: 6px 11px; border-radius: 7px; text-decoration: none; border: 1px solid #bfdbfe;
+      display: inline-flex; align-items: center; gap: 5px; cursor: pointer;
+    }
+    .att-link:hover { background: #dbeafe; }
+
+    .map-drawer {
+      display: none; margin-bottom: 12px; border-radius: 10px; overflow: hidden;
+      border: 1px solid #93c5fd; background: var(--card-sub);
+    }
+    .map-drawer-header {
+      background: #eff6ff; color: #1e3a8a; padding: 7px 12px; font-size: 12px; font-weight: 700;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .map-drawer iframe { width: 100%; height: 230px; border: none; display: block; }
+
+    .controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin-bottom: 10px; }
+    .field-group { display: flex; flex-direction: column; gap: 4px; }
+    .field-label { font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.4px; color: var(--muted); }
+    .controls select, .controls input {
+      padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px;
+      font-size: 13px; background: var(--card-sub); color: var(--text); outline: none; font-weight: 500;
+    }
+    .controls select:focus, .controls input:focus, .textarea-nota:focus { border-color: var(--accent); background: var(--card); }
+
+    .quick-notes-bar {
+      display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 6px;
+    }
+    .quick-note-chip {
+      background: var(--card-sub); border: 1px solid var(--border); color: var(--muted);
+      padding: 3px 9px; border-radius: 14px; font-size: 11.5px; font-weight: 600; cursor: pointer; transition: 0.15s;
+    }
+    .quick-note-chip:hover { border-color: var(--accent); color: var(--accent); background: #eff6ff; }
+
+    .textarea-nota {
+      width: 100%; padding: 9px 11px; border: 1px solid var(--border); border-radius: 8px;
+      font-size: 13px; min-height: 54px; margin-bottom: 12px; resize: vertical;
+      background: var(--card-sub); color: var(--text); outline: none; line-height: 1.45;
+    }
+
+    .actions {
+      display: flex; justify-content: space-between; align-items: center;
+      border-top: 1px solid var(--border); padding-top: 12px; flex-wrap: wrap; gap: 10px;
+    }
+    .btn-save {
+      background: var(--accent); color: #fff; border: none; padding: 9px 18px;
+      border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer; transition: 0.2s;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .btn-save:hover { background: var(--accent-hover); }
+    .btn-save.unsaved { background: #d97706; animation: pulseBtn 1.5s infinite; }
+    @keyframes pulseBtn {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(217, 119, 6, 0.4); }
+      50% { box-shadow: 0 0 0 6px rgba(217, 119, 6, 0); }
+    }
+
+    .btn-wa {
+      background: #16a34a; color: #fff; border: none; padding: 9px 15px; border-radius: 8px;
+      text-decoration: none; font-weight: 700; font-size: 13px; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 6px; transition: 0.2s;
+    }
+    .btn-wa:hover { background: #15803d; transform: translateY(-1px); }
+
+    .btn-evidencia {
+      background: var(--card-sub); border: 1px solid var(--border); color: var(--text);
+      padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 700;
+      transition: all 0.15s ease; display: inline-flex; align-items: center; gap: 5px; text-decoration: none;
+    }
+    .btn-evidencia:hover { border-color: var(--muted); background: var(--border); }
+
+    .btn-geo-gps { background: #eff6ff; border: 1px solid #93c5fd; color: #1d4ed8; }
+    .btn-geo-search { background: #f0fdf4; border: 1px solid #86efac; color: #15803d; }
+
+    .toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      background: #0f172a; color: #fff; padding: 11px 22px; border-radius: 24px;
+      font-size: 13.5px; font-weight: 600; display: none; z-index: 100; box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+    }
+
+    @media print {
+      .topbar, .nav-tabs, .filters-wrapper, .actions, .quick-notes-bar, #loginScreen { display: none !important; }
+      body { background: #fff; color: #000; padding: 0; }
+      .card { break-inside: avoid; border: 1px solid #000; margin-bottom: 12px; box-shadow: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Pantalla Login -->
+  <div id="loginScreen">
+    <div class="login-card">
+      <h2>🏛️ MuniGestor</h2>
+      <p>Panel Operativo, Proyectos y Feria Digital</p>
+      <input type="text" id="opNombre" placeholder="Tu Nombre / Responsable" />
+      <select id="opArea">
+        <option value="TODAS">📋 Ver Todas las Áreas</option>
+        <option value="Obras y Servicios">🛠️ Obras y Servicios</option>
+        <option value="Alumbrado Público">💡 Alumbrado Público</option>
+        <option value="Limpieza y Poda">🌿 Limpieza y Poda</option>
+        <option value="Desarrollo Humano">🤝 Desarrollo Humano</option>
+        <option value="Despacho del Intendente">🏛️ Despacho del Intendente</option>
+      </select>
+      <input type="password" id="opPin" placeholder="PIN de Acceso Municipal" onkeypress="if(event.key==='Enter') login()" />
+      <button type="button" onclick="login()">Ingresar</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">✅ Guardado correctamente</div>
+
+  <div class="topbar">
+    <div class="topbar-left">
+      <h1>🏛️ MuniGestor — Operaciones, Proyectos y Feria Digital</h1>
+      <div class="topbar-meta">
+        <span id="opInfo">Operador</span>
+        <span class="sync-pill" id="lastSyncInfo">⏳ Sincronizando...</span>
+      </div>
+    </div>
+    <div style="display:flex; gap:8px; align-items:center;">
+      <button type="button" class="btn-top" onclick="toggleDarkMode()" id="btnTheme" title="Cambiar modo de color">🌙 Modo Oscuro</button>
+      <button type="button" class="btn-top" onclick="fetchReclamos(); fetchEmprendedoresAdmin(); fetchProyectosAdmin();">🔄 Actualizar Todo</button>
+      <button type="button" class="btn-top" onclick="logout()">Salir</button>
+    </div>
+  </div>
+
+  <div class="container">
+    <!-- KPIs Globales Interactivos -->
+    <div class="kpi-grid">
+      <div class="kpi" id="kpiCard_TODOS" onclick="setFiltro('TODOS')">
+        <div class="kpi-top">
+          <div class="kpi-num" id="kpiTotal">0</div>
+          <span class="kpi-pct">100%</span>
+        </div>
+        <div class="kpi-label">📋 Total Reclamos</div>
+      </div>
+      <div class="kpi" id="kpiCard_Urgencia" onclick="setFiltro('Urgencia')">
+        <div class="kpi-top">
+          <div class="kpi-num" style="color:var(--red)" id="kpiUrgentes">0</div>
+          <span class="kpi-pct" id="pctUrgentes">0%</span>
+        </div>
+        <div class="kpi-label"><span class="dot dot-red"></span> Urgencias Activas</div>
+      </div>
+      <div class="kpi" id="kpiCard_Pendiente" onclick="setFiltro('⏳ Pendiente')">
+        <div class="kpi-top">
+          <div class="kpi-num" style="color:var(--amber)" id="kpiPendientes">0</div>
+          <span class="kpi-pct" id="pctPendientes">0%</span>
+        </div>
+        <div class="kpi-label">⏳ Pendientes</div>
+      </div>
+      <div class="kpi" id="kpiCard_Proceso" onclick="setFiltro('🛠️ En Proceso')">
+        <div class="kpi-top">
+          <div class="kpi-num" style="color:var(--accent)" id="kpiProceso">0</div>
+          <span class="kpi-pct" id="pctProceso">0%</span>
+        </div>
+        <div class="kpi-label">🛠️ En Proceso</div>
+      </div>
+      <div class="kpi" id="kpiCard_Resuelto" onclick="setFiltro('✅ Resuelto')">
+        <div class="kpi-top">
+          <div class="kpi-num" style="color:var(--green)" id="kpiResueltos">0</div>
+          <span class="kpi-pct" id="pctResueltos">0%</span>
+        </div>
+        <div class="kpi-label">✅ Resueltos</div>
+      </div>
+    </div>
+
+    <!-- Barra de Pestañas (Bandeja vs Proyectos Productivos vs Feria Digital vs Reportes) -->
+    <div class="nav-tabs">
+      <div class="tab-group">
+        <button type="button" class="tab-btn active" id="tabBandeja" onclick="cambiarVista('bandeja')">📋 Bandeja de Reclamos</button>
+        <button type="button" class="tab-btn" id="tabProyectos" onclick="cambiarVista('proyectos')">
+          🚀 Proyectos y Microcréditos <span class="badge-pend-emp" id="badgeProyPendientes" style="display:none;">0</span>
+        </button>
+        <button type="button" class="tab-btn" id="tabEmprendedores" onclick="cambiarVista('emprendedores')">
+          🛒 Aprobar Emprendedores y Feria <span class="badge-pend-emp" id="badgeEmpPendientes" style="display:none;">0</span>
+        </button>
+        <button type="button" class="tab-btn" id="tabReportes" onclick="cambiarVista('reportes')">📊 Reportes por Barrio y Vecino</button>
+      </div>
+      <div class="toolbar-right">
+        <button type="button" class="btn-export" id="btnVistaCompacta" onclick="toggleVistaCompacta()">📐 Vista 2 Columnas</button>
+        <button type="button" class="btn-export" onclick="window.print()">🖨️ Imprimir / PDF</button>
+        <button type="button" class="btn-export" onclick="exportarCSV()">📥 Descargar Excel (CSV)</button>
+      </div>
+    </div>
+
+    <!-- NUEVA VISTA: EVALUACIÓN Y APROBACIÓN DE PROYECTOS PRODUCTIVOS (MICROCRÉDITOS / BANCO DE HERRAMIENTAS) -->
+    <div id="vistaProyectos">
+      <div class="filters-wrapper">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+          <div>
+            <h3 style="font-size:16px;font-weight:800;color:var(--teal-proy);">🚀 Evaluación de Proyectos Productivos, Herramientas y Microcréditos</h3>
+            <p style="font-size:12.5px;color:var(--muted);">Revisá las Carpetas Técnicas armadas con IA para Desarrollo Humano, imprimilas en PDF, coordiná la visita social o aprobá el beneficio.</p>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <select id="filtroEstadoProy" onchange="renderProyectosAdmin()" style="padding:9px 12px;border-radius:9px;border:1px solid var(--border);background:var(--card-sub);color:var(--text);font-weight:700;">
+              <option value="TODOS">📋 Ver Todos los Proyectos</option>
+              <option value="⏳ En Evaluación">⏳ Solo En Evaluación</option>
+              <option value="🏠 En Visita Social">🏠 En Visita Social</option>
+              <option value="✅ Aprobado">✅ Solo Proyectos Aprobados</option>
+              <option value="❌ Observado">❌ Observados / Rechazados</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="claims" id="contenedorProyectosAdmin"></div>
+    </div>
+
+    <!-- VISTA: GESTIÓN, EDICIÓN COMPLETA Y APROBACIÓN DE EMPRENDEDORES (FERIA DIGITAL) -->
+    <div id="vistaEmprendedores">
+      <div class="filters-wrapper">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+          <div>
+            <h3 style="font-size:16px;font-weight:800;color:var(--purple);">🛒 Administración de la Feria Digital y Guía de Oficios</h3>
+            <p style="font-size:12.5px;color:var(--muted);">Podés editar todos los datos del emprendedor (Nombre, Celular, Barrio, Rubro y Descripción), aprobar su publicación o actualizar los cambios.</p>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <select id="filtroEstadoEmp" onchange="renderEmprendedoresAdmin()" style="padding:9px 12px;border-radius:9px;border:1px solid var(--border);background:var(--card-sub);color:var(--text);font-weight:700;">
+              <option value="TODOS">📋 Ver Todos los Emprendedores</option>
+              <option value="⏳ Pendiente">⏳ Solo Pendientes de Aprobar</option>
+              <option value="✅ Aprobado">✅ Solo Publicados en la Feria</option>
+              <option value="❌ Oculto">❌ Ocultos / Pausados</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="claims" id="contenedorEmprendedoresAdmin"></div>
+    </div>
+
+    <!-- VISTA DE REPORTES ANALÍTICOS -->
+    <div id="vistaReportes">
+      <div class="reports-grid">
+        <div class="report-card">
+          <h3><span>📍 Reclamos por Barrio</span> <span style="font-size:11.5px;color:var(--accent);">Tocá uno para filtrar</span></h3>
+          <div class="report-sub">Distribución geográfica de reclamos recibidos en el municipio</div>
+          <div id="repBarrios"></div>
+        </div>
+
+        <div class="report-card">
+          <h3><span>🛠️ Tipos de Reclamos y Problemáticas</span> <span id="tasaResolucionBadge" style="font-size:12px;color:var(--green);"></span></h3>
+          <div class="report-sub">Clasificación automática por motivo del reclamo y nivel de urgencia</div>
+          <div id="repTipos"></div>
+        </div>
+      </div>
+
+      <div class="report-card">
+        <h3><span>👥 Cantidad de Reclamos por Vecino (Recurrencia)</span></h3>
+        <div class="report-sub">Ranking de vecinos con mayor cantidad de gestiones registradas (Tocá "Ver casos" para filtrar su historial)</div>
+        <div class="table-wrap">
+          <table class="neighbors-table">
+            <thead>
+              <tr>
+                <th>Vecino / Identificación</th>
+                <th>WhatsApp</th>
+                <th>Barrio Principal</th>
+                <th>Total Reclamos</th>
+                <th>Pendientes / Proceso</th>
+                <th>Resueltos</th>
+                <th>Acción</th>
+              </tr>
+            </thead>
+            <tbody id="repVecinosBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- VISTA BANDEJA OPERATIVA DE RECLAMOS -->
+    <div id="vistaBandeja">
+      <div class="filters-wrapper">
+        <div class="filters">
+          <input type="text" id="filtroTxt" placeholder="🔍 Buscar #código, nombre, barrio, calle o teléfono..." oninput="render()" />
+          <select id="filtroBarrio" onchange="render()">
+            <option value="TODOS">📍 Todos los Barrios</option>
+          </select>
+          <select id="filtroArea" onchange="render()">
+            <option value="TODAS">🏢 Todas las Secretarías</option>
+            <option value="Sin asignar">⚠️ Sin asignar</option>
+            <option value="Obras y Servicios">🛠️ Obras y Servicios</option>
+            <option value="Alumbrado Público">💡 Alumbrado Público</option>
+            <option value="Limpieza y Poda">🌿 Limpieza y Poda</option>
+            <option value="Desarrollo Humano">🤝 Desarrollo Humano</option>
+            <option value="Despacho del Intendente">🏛️ Despacho del Intendente</option>
+          </select>
+          <select id="filtroEst" onchange="render()">
+            <option value="ACTIVOS">⚡ Activos (Pendientes/Proceso)</option>
+            <option value="TODOS">📋 Todos los Estados</option>
+            <option value="⏳ Pendiente">⏳ Solo Pendientes</option>
+            <option value="🛠️ En Proceso">🛠️ Solo En Proceso</option>
+            <option value="✅ Resuelto">✅ Solo Resueltos</option>
+          </select>
+          <select id="filtroOrden" onchange="render()">
+            <option value="RECIENTES">🕒 Más recientes primero</option>
+            <option value="URGENTES">🚨 Urgencias primero</option>
+            <option value="ANTIGUOS">⏳ Más antiguos primero</option>
+          </select>
+        </div>
+        <div class="filter-status-bar">
+          <span id="contadorResultados">Mostrando 0 reclamos</span>
+          <button type="button" class="btn-clear-filters" id="btnLimpiarFiltros" onclick="limpiarFiltros()">✖ Limpiar filtros aplicados</button>
+        </div>
+      </div>
+
+      <div class="claims" id="contenedor"></div>
+    </div>
+  </div>
+
+  <script>
+    // URL corregida con una sola "c" al final (/exec)
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyVNJosYYBbuYVLxNAP0hRw8wqNOnDDu6OQzXS4NYIOJoZSxPqNVtYbOxpcl68eViY/exec';
+
+    let datos = [];
+    let datosEmprendedores = [];
+    let datosProyectos = [];
+    let evidenciasTmp = {};
+
+    window.onload = function() {
+      if (localStorage.getItem('muni_dark') === '1') {
+        document.body.classList.add('dark-mode');
+        document.getElementById('btnTheme').innerText = '☀️ Modo Claro';
+      }
+      if (localStorage.getItem('muni_compact') === '1') {
+        document.getElementById('contenedor').classList.add('compact-grid');
+        document.getElementById('btnVistaCompacta').classList.add('active-view');
+      }
+      if (localStorage.getItem('muni_pin')) {
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('opInfo').innerText = 'Usuario: ' + localStorage.getItem('muni_op') + ' | Área: ' + localStorage.getItem('muni_area');
+        document.getElementById('filtroArea').value = localStorage.getItem('muni_area') || 'TODAS';
+        fetchReclamos();
+        fetchEmprendedoresAdmin();
+        fetchProyectosAdmin();
+      }
+    };
+
+    function toggleDarkMode() {
+      const isDark = document.body.classList.toggle('dark-mode');
+      localStorage.setItem('muni_dark', isDark ? '1' : '0');
+      document.getElementById('btnTheme').innerText = isDark ? '☀️ Modo Claro' : '🌙 Modo Oscuro';
+    }
+
+    function toggleVistaCompacta() {
+      const cont = document.getElementById('contenedor');
+      const btn = document.getElementById('btnVistaCompacta');
+      const activa = cont.classList.toggle('compact-grid');
+      btn.classList.toggle('active-view', activa);
+      localStorage.setItem('muni_compact', activa ? '1' : '0');
+    }
+
+    function login() {
+      const pin = document.getElementById('opPin').value.trim();
+      if (!pin) {
+        alert('Por favor ingresá el PIN de acceso');
+        return;
+      }
+      const op = document.getElementById('opNombre').value.trim() || 'Operador';
+      const area = document.getElementById('opArea').value;
+
+      localStorage.setItem('muni_pin', pin);
+      localStorage.setItem('muni_op', op);
+      localStorage.setItem('muni_area', area);
+
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('opInfo').innerText = 'Usuario: ' + op + ' | Área: ' + area;
+      document.getElementById('filtroArea').value = area;
+      fetchReclamos();
+      fetchEmprendedoresAdmin();
+      fetchProyectosAdmin();
+    }
+
+    function logout() {
+      localStorage.removeItem('muni_pin');
+      location.reload();
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.innerText = msg;
+      t.style.display = 'block';
+      setTimeout(function() { t.style.display = 'none'; }, 2800);
+    }
+
+    function copiarCodigo(id) {
+      navigator.clipboard.writeText(id.startsWith('PROY-') || id.startsWith('EMP-') ? id : '#' + id);
+      showToast('📋 Código ' + id + ' copiado al portapapeles');
+    }
+
+    function cambiarVista(vista) {
+      document.getElementById('vistaBandeja').style.display = vista === 'bandeja' ? 'block' : 'none';
+      document.getElementById('vistaProyectos').style.display = vista === 'proyectos' ? 'block' : 'none';
+      document.getElementById('vistaEmprendedores').style.display = vista === 'emprendedores' ? 'block' : 'none';
+      document.getElementById('vistaReportes').style.display = vista === 'reportes' ? 'block' : 'none';
+
+      document.getElementById('tabBandeja').classList.toggle('active', vista === 'bandeja');
+      document.getElementById('tabProyectos').classList.toggle('active', vista === 'proyectos');
+      document.getElementById('tabEmprendedores').classList.toggle('active', vista === 'emprendedores');
+      document.getElementById('tabReportes').classList.toggle('active', vista === 'reportes');
+
+      if (vista === 'reportes') generarReportes();
+      if (vista === 'emprendedores') fetchEmprendedoresAdmin();
+      if (vista === 'proyectos') fetchProyectosAdmin();
+    }
+
+    // =========================================================================
+    // MÓDULO NUEVO: EVALUACIÓN Y APROBACIÓN DE PROYECTOS PRODUCTIVOS CON IA
+    // =========================================================================
+    async function fetchProyectosAdmin() {
+      const cont = document.getElementById('contenedorProyectosAdmin');
+      try {
+        const res = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ accion: 'listarProyectosAdmin', pin: localStorage.getItem('muni_pin') }),
+          redirect: 'follow'
+        });
+        const d = await res.json();
+        if (d.status === 'success') {
+          datosProyectos = d.proyectos || [];
+          const cantPend = datosProyectos.filter(function(p) {
+            return String(p.estado).includes('Evaluaci') || String(p.estado).includes('Visita');
+          }).length;
+          const badge = document.getElementById('badgeProyPendientes');
+          if (cantPend > 0) {
+            badge.style.display = 'inline-block';
+            badge.innerText = cantPend;
+          } else {
+            badge.style.display = 'none';
+          }
+          renderProyectosAdmin();
+        }
+      } catch (e) {
+        if (cont) cont.innerHTML = '<div style="padding:20px;color:var(--red);">Error al cargar proyectos productivos.</div>';
+      }
+    }
+
+    function marcarCambioProySinGuardar(id) {
+      const card = document.getElementById('card_proy_' + id);
+      const btnGuardar = document.getElementById('btn_save_proy_' + id);
+      if (card) card.classList.add('unsaved-changes');
+      if (btnGuardar) {
+        btnGuardar.classList.add('unsaved');
+        btnGuardar.innerText = '💾 Guardar Cambios *';
+      }
+    }
+
+    function renderProyectosAdmin() {
+      const cont = document.getElementById('contenedorProyectosAdmin');
+      const filtro = document.getElementById('filtroEstadoProy').value;
+
+      const filtrados = datosProyectos.filter(function(p) {
+        if (filtro === 'TODOS') return true;
+        return String(p.estado) === filtro;
+      });
+
+      if (filtrados.length === 0) {
+        cont.innerHTML = '<div style="text-align:center; padding:35px; color:var(--muted); background:var(--card); border-radius:14px; border:1px solid var(--border);">🚀 No hay proyectos productivos en este estado actualmente.</div>';
+        return;
+      }
+
+      const listaBarriosBase = [
+        "Centro", "Santa Teresita", "San Cayetano", "El Cruce", "Centro 2",
+        "Luján", "25 de Mayo", "El Bordo", "Betania", "Zona Rural / Finca", "Otro Barrio"
+      ];
+
+      cont.innerHTML = filtrados.map(function(p) {
+        const estaAprobado = String(p.estado).includes('Aprobado');
+        const enVisita = String(p.estado).includes('Visita');
+        const observado = String(p.estado).includes('Observado');
+
+        let badgeEstado = '<span class="badge-prio prio-ges">⏳ En Evaluación</span>';
+        if (estaAprobado) badgeEstado = '<span class="badge-prio prio-inf">✅ Proyecto Aprobado</span>';
+        else if (enVisita) badgeEstado = '<span class="badge-prio prio-visita">🏠 En Visita Social</span>';
+        else if (observado) badgeEstado = '<span class="badge-prio prio-urg">❌ Observado</span>';
+
+        const opcionesBarrio = listaBarriosBase.slice();
+        if (p.barrio && !opcionesBarrio.includes(p.barrio)) {
+          opcionesBarrio.unshift(p.barrio);
+        }
+        const htmlSelectBarrio = opcionesBarrio.map(function(b) {
+          return '<option value="' + b.replace(/"/g, '&quot;') + '" ' + (p.barrio === b ? 'selected' : '') + '>📍 ' + b + '</option>';
+        }).join('');
+
+        const htmlLinks =
+          (p.pdfUrl && p.pdfUrl.startsWith('http')
+            ? '<a href="' + p.pdfUrl + '" target="_blank" class="att-link" style="background:#f0fdfa;color:#0f766e;border-color:#5eead4;">📄 Abrir Carpeta Técnica PDF (Drive)</a>'
+            : '') +
+          '<button type="button" class="att-link" onclick="imprimirCarpetaProyecto(\'' + p.id + '\')" style="background:#eff6ff;color:#1d4ed8;border-color:#93c5fd;">🖨️ Imprimir Carpeta Oficial</button>' +
+          (p.foto && p.foto.startsWith('http')
+            ? '<a href="' + p.foto + '" target="_blank" class="att-link">📸 Ver Foto del Trabajo</a>'
+            : '');
+
+        // Si ya está "✅ Aprobado", NO mostramos de vuelta el botón "✅ Aprobar Proyecto / Herramientas"
+        let botonesAccionIzq = '';
+        if (estaAprobado) {
+          botonesAccionIzq =
+            '<button type="button" class="btn-save" id="btn_save_proy_' + p.id + '" onclick="cambiarEstadoProy(\'' + p.id + '\', \'✅ Aprobado\')">💾 Guardar Cambios</button>' +
+            '<button type="button" class="btn-evidencia" onclick="cambiarEstadoProy(\'' + p.id + '\', \'🏠 En Visita Social\')">🏠 Pasar a Visita Social</button>' +
+            '<button type="button" class="btn-evidencia" onclick="cambiarEstadoProy(\'' + p.id + '\', \'❌ Observado\')">⏸️ Observar</button>';
+        } else {
+          botonesAccionIzq =
+            '<button type="button" class="btn-save" style="background:#0d9488;" onclick="cambiarEstadoProy(\'' + p.id + '\', \'✅ Aprobado\')">✅ Aprobar Proyecto / Herramientas</button>' +
+            (!enVisita ? '<button type="button" class="btn-evidencia" style="background:#eff6ff;color:#1e40af;border-color:#93c5fd;" onclick="cambiarEstadoProy(\'' + p.id + '\', \'🏠 En Visita Social\')">🏠 Programar Visita Social</button>' : '') +
+            '<button type="button" class="btn-save" id="btn_save_proy_' + p.id + '" onclick="cambiarEstadoProy(\'' + p.id + '\', \'' + p.estado + '\')">💾 Guardar Cambios</button>' +
+            '<button type="button" class="btn-evidencia" onclick="cambiarEstadoProy(\'' + p.id + '\', \'❌ Observado\')">❌ Observar</button>';
+        }
+
+        const nomSeg = String(p.nombre || '').replace(/"/g, '&quot;');
+        const telSeg = String(p.telefono || '').replace(/"/g, '&quot;');
+        const rubSeg = String(p.rubro || '').replace(/"/g, '&quot;');
+        const necSeg = String(p.necesidad || '').replace(/"/g, '&quot;');
+
+        return '<div class="card proy-card-admin" id="card_proy_' + p.id + '">' +
+          '<div class="card-header">' +
+            '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">' +
+              '<span class="badge-id" onclick="copiarCodigo(\'' + p.id + '\')" title="Copiar expediente">' + p.id + ' 📋</span>' +
+              badgeEstado +
+              '<span class="badge-barrio">👨‍👩‍👧‍👦 ' + (p.familia || 'Grupo familiar') + '</span>' +
+              (p.pin ? '<span style="background:#fef3c7;color:#92400e;padding:3px 8px;border-radius:6px;font-weight:800;font-size:11.5px;">🔒 PIN: ' + p.pin + '</span>' : '') +
+            '</div>' +
+            '<span class="time-ago">📅 ' + p.fecha + (p.verificador ? ' • Evaluó: ' + p.verificador : '') + '</span>' +
+          '</div>' +
+
+          '<div class="attachments-box">' + htmlLinks + '</div>' +
+
+          '<div class="controls">' +
+            '<div class="field-group">' +
+              '<label class="field-label">👤 Nombre del Emprendedor Solicitante</label>' +
+              '<input type="text" id="nom_proy_' + p.id + '" value="' + nomSeg + '" oninput="marcarCambioProySinGuardar(\'' + p.id + '\')" />' +
+            '</div>' +
+
+            '<div class="field-group">' +
+              '<label class="field-label">📱 Celular / WhatsApp</label>' +
+              '<input type="tel" id="tel_proy_' + p.id + '" value="' + telSeg + '" oninput="marcarCambioProySinGuardar(\'' + p.id + '\')" />' +
+            '</div>' +
+
+            '<div class="field-group">' +
+              '<label class="field-label">📍 Barrio / Zona</label>' +
+              '<select id="bar_proy_' + p.id + '" onchange="marcarCambioProySinGuardar(\'' + p.id + '\')">' +
+                htmlSelectBarrio +
+              '</select>' +
+            '</div>' +
+
+            '<div class="field-group">' +
+              '<label class="field-label">🏷️ Rubro Productivo</label>' +
+              '<input type="text" id="rub_proy_' + p.id + '" value="' + rubSeg + '" oninput="marcarCambioProySinGuardar(\'' + p.id + '\')" />' +
+            '</div>' +
+          '</div>' +
+
+          '<div class="field-group" style="margin-bottom:8px;">' +
+            '<label class="field-label">🛠️ Herramientas, Materiales o Microcrédito Solicitado por el Vecino (' + (p.etapa || '') + ')</label>' +
+            '<input type="text" id="nec_proy_' + p.id + '" value="' + necSeg + '" style="padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:var(--card-sub);color:var(--text);" oninput="marcarCambioProySinGuardar(\'' + p.id + '\')" />' +
+          '</div>' +
+
+          '<div class="field-group" style="margin-bottom:8px;">' +
+            '<label class="field-label">📄 Carpeta Técnica Redactada por IA (Editable por Desarrollo Humano)</label>' +
+            '<textarea id="ficha_proy_' + p.id + '" class="textarea-nota" style="min-height:115px;font-size:13px;" oninput="marcarCambioProySinGuardar(\'' + p.id + '\')">' + (p.fichaTecnicaIA || '') + '</textarea>' +
+          '</div>' +
+
+          '<div class="field-group" style="margin-bottom:10px;">' +
+            '<label class="field-label">💬 Dictamen / Informe de Desarrollo Humano para el Vecino</label>' +
+            '<div class="quick-notes-bar">' +
+              '<button type="button" class="quick-note-chip" onclick="aplicarPlantillaProy(\'' + p.id + '\', \'Su carpeta técnica se encuentra en evaluación socio-productiva. Coordinaremos una visita domiciliaria.\')">🏠 Coordinar visita social</button>' +
+              '<button type="button" class="quick-note-chip" onclick="aplicarPlantillaProy(\'' + p.id + '\', \'¡Felicitaciones! Su proyecto fue APROBADO por Desarrollo Humano para el fortalecimiento de herramientas/insumos.\')">✅ Proyecto Aprobado</button>' +
+              '<button type="button" class="quick-note-chip" onclick="aplicarPlantillaProy(\'' + p.id + '\', \'Necesitamos que se acerque a Desarrollo Humano con fotocopia de DNI para completar su legajo.\')">🪪 Solicitar DNI en oficina</button>' +
+            '</div>' +
+            '<textarea id="dict_proy_' + p.id + '" class="textarea-nota" style="margin-bottom:4px;" placeholder="Escribí la resolución o fecha de visita social..." oninput="marcarCambioProySinGuardar(\'' + p.id + '\')">' + (p.dictamen || '') + '</textarea>' +
+          '</div>' +
+
+          '<div class="actions">' +
+            '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
+              botonesAccionIzq +
+            '</div>' +
+            '<div>' +
+              '<button type="button" class="btn-wa" onclick="avisarProyectoWhatsApp(\'' + p.id + '\')">📲 Avisar por WhatsApp</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    }
+
+    function aplicarPlantillaProy(id, texto) {
+      const campo = document.getElementById('dict_proy_' + id);
+      if (campo) {
+        campo.value = texto;
+        marcarCambioProySinGuardar(id);
+      }
+    }
+
+    async function cambiarEstadoProy(id, nuevoEstado) {
+      const nomEditado = document.getElementById('nom_proy_' + id) ? document.getElementById('nom_proy_' + id).value.trim() : '';
+      const telEditado = document.getElementById('tel_proy_' + id) ? document.getElementById('tel_proy_' + id).value.trim() : '';
+      const barEditado = document.getElementById('bar_proy_' + id) ? document.getElementById('bar_proy_' + id).value.trim() : '';
+      const rubEditado = document.getElementById('rub_proy_' + id) ? document.getElementById('rub_proy_' + id).value.trim() : '';
+      const necEditada = document.getElementById('nec_proy_' + id) ? document.getElementById('nec_proy_' + id).value.trim() : '';
+      const fichaEditada = document.getElementById('ficha_proy_' + id) ? document.getElementById('ficha_proy_' + id).value.trim() : '';
+      const dictamenEditado = document.getElementById('dict_proy_' + id) ? document.getElementById('dict_proy_' + id).value.trim() : '';
+
+      if (!nomEditado || !telEditado) {
+        alert('⚠️ El Nombre del solicitante y su Celular no pueden quedar vacíos.');
+        return;
+      }
+
+      showToast('⏳ Guardando evaluación del proyecto...');
+      try {
+        const res = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            accion: 'actualizarProyectoAdmin',
+            pin: localStorage.getItem('muni_pin'),
+            id: id,
+            nuevoEstado: nuevoEstado,
+            nombreEditado: nomEditado,
+            telefonoEditado: telEditado,
+            barrioEditado: barEditado,
+            rubroEditado: rubEditado,
+            necesidadEditada: necEditada,
+            fichaEditada: fichaEditada,
+            dictamenEditado: dictamenEditado,
+            operador: localStorage.getItem('muni_op') || 'Desarrollo Humano'
+          }),
+          redirect: 'follow'
+        });
+        const d = await res.json();
+        if (d.status === 'success') {
+          showToast('✅ Proyecto ' + id + ' guardado (' + nuevoEstado + ')');
+          fetchProyectosAdmin();
+        } else {
+          alert('No se pudo actualizar: ' + (d.mensaje || ''));
+        }
+      } catch (e) {
+        alert('Error de conexión al guardar proyecto.');
+      }
+    }
+
+    function avisarProyectoWhatsApp(id) {
+      const proy = datosProyectos.find(function(x) { return x.id === id; }) || {};
+      const nom = document.getElementById('nom_proy_' + id) ? document.getElementById('nom_proy_' + id).value.trim() : (proy.nombre || 'Vecino');
+      const tel = document.getElementById('tel_proy_' + id) ? document.getElementById('tel_proy_' + id).value.trim() : (proy.telefono || '');
+      const rub = document.getElementById('rub_proy_' + id) ? document.getElementById('rub_proy_' + id).value.trim() : (proy.rubro || '');
+      const dict = document.getElementById('dict_proy_' + id) ? document.getElementById('dict_proy_' + id).value.trim() : (proy.dictamen || '');
+
+      let telWa = String(tel).replace(/\D/g, '');
+      if (telWa.length < 7) {
+        alert('⚠️ Ingresá un número de WhatsApp válido.');
+        return;
+      }
+      if (!telWa.startsWith('54')) {
+        telWa = '549' + telWa.replace(/^0+/, '').replace(/^15/, '');
+      }
+
+      const linkPdf = (proy.pdfUrl && proy.pdfUrl.startsWith('http')) ? '\n📄 *Carpeta Técnica PDF:* ' + proy.pdfUrl : '';
+      const msg = encodeURIComponent(
+        '🏛️ *SECRETARÍA DE DESARROLLO HUMANO*\n' +
+        '*Municipalidad de ...*\n\n' +
+        'Hola *' + nom + '*, te escribimos por tu *Proyecto Productivo (' + id + ')* del rubro *' + rub + '*.\n\n' +
+        '📊 *Estado:* ' + (proy.estado || '⏳ En Evaluación') + '\n' +
+        '📝 *Informe Oficial:* ' + (dict || 'Tu carpeta técnica se encuentra en evaluación por el equipo de fortalecimiento productivo.') +
+        linkPdf + '\n\n¡Seguimos acompañando a nuestros emprendedores!'
+      );
+      window.open('https://wa.me/' + telWa + '?text=' + msg, '_blank');
+    }
+
+    // Imprime una Carpeta Técnica formal lista para firmar o guardar como PDF
+    function imprimirCarpetaProyecto(id) {
+      const proy = datosProyectos.find(function(x) { return x.id === id; }) || {};
+      const nom = document.getElementById('nom_proy_' + id) ? document.getElementById('nom_proy_' + id).value.trim() : (proy.nombre || '');
+      const tel = document.getElementById('tel_proy_' + id) ? document.getElementById('tel_proy_' + id).value.trim() : (proy.telefono || '');
+      const bar = document.getElementById('bar_proy_' + id) ? document.getElementById('bar_proy_' + id).value.trim() : (proy.barrio || '');
+      const rub = document.getElementById('rub_proy_' + id) ? document.getElementById('rub_proy_' + id).value.trim() : (proy.rubro || '');
+      const nec = document.getElementById('nec_proy_' + id) ? document.getElementById('nec_proy_' + id).value.trim() : (proy.necesidad || '');
+      const ficha = document.getElementById('ficha_proy_' + id) ? document.getElementById('ficha_proy_' + id).value.trim() : (proy.fichaTecnicaIA || '');
+      const dict = document.getElementById('dict_proy_' + id) ? document.getElementById('dict_proy_' + id).value.trim() : (proy.dictamen || 'Pendiente de firma');
+
+      const win = window.open('', '_blank', 'width=850,height=900');
+      if (!win) {
+        alert('Permití las ventanas emergentes para imprimir la carpeta técnica.');
+        return;
+      }
+
+      const htmlDoc =
+        '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Carpeta Técnica ' + id + '</title>' +
+        '<style>' +
+          'body{font-family:Arial,sans-serif;padding:32px;color:#0f172a;line-height:1.5;}' +
+          '.head{border-bottom:3px solid #075e54;padding-bottom:14px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;}' +
+          '.head h1{font-size:20px;color:#075e54;margin:0;}' +
+          '.box{background:#f8fafc;border:1px solid #cbd5e1;border-radius:10px;padding:14px 16px;margin-bottom:16px;}' +
+          '.box h3{font-size:14px;color:#075e54;text-transform:uppercase;margin:0 0 8px 0;border-bottom:1px solid #e2e8f0;padding-bottom:4px;}' +
+          '.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13.5px;}' +
+          '.ficha{white-space:pre-wrap;font-size:13.5px;}' +
+          '.firmas{margin-top:55px;display:grid;grid-template-columns:1fr 1fr;gap:40px;text-align:center;font-size:13px;}' +
+          '.linea{border-top:1px solid #334155;padding-top:6px;margin-top:40px;}' +
+        '</style></head><body>' +
+        '<div class="head">' +
+          '<div><h1>CARPETA TÉCNICA DE PROYECTO PRODUCTIVO</h1><div style="font-size:13px;color:#475569;">Municipalidad de ... • Secretaría de Desarrollo Humano</div></div>' +
+          '<div style="text-align:right;font-size:13px;"><strong>Expediente: ' + id + '</strong><br>Fecha: ' + (proy.fecha || '') + '<br>Estado: ' + (proy.estado || '') + '</div>' +
+        '</div>' +
+        '<div class="box"><h3>1. Datos del Emprendedor Solicitante</h3><div class="grid">' +
+          '<div><strong>Nombre y Apellido:</strong> ' + nom + '</div>' +
+          '<div><strong>Teléfono / WhatsApp:</strong> ' + tel + '</div>' +
+          '<div><strong>Barrio / Zona Rural:</strong> ' + bar + '</div>' +
+          '<div><strong>Rubro Productivo:</strong> ' + rub + '</div>' +
+          '<div><strong>Etapa Actual:</strong> ' + (proy.etapa || '') + '</div>' +
+          '<div><strong>Impacto Familiar:</strong> ' + (proy.familia || '') + '</div>' +
+        '</div></div>' +
+        '<div class="box"><h3>2. Herramientas, Materiales o Microcrédito Solicitado</h3><div style="font-size:13.5px;">' + nec + '</div></div>' +
+        '<div class="box"><h3>3. Evaluación y Formulación Técnica (Asistida por IA)</h3><div class="ficha">' + ficha + '</div></div>' +
+        '<div class="box"><h3>4. Dictamen de la Secretaría de Desarrollo Humano</h3><div class="ficha">' + dict + '</div></div>' +
+        '<div class="firmas">' +
+          '<div class="linea">Firma y Aclaración del Solicitante (' + nom + ')</div>' +
+          '<div class="linea">Firma y Sello — Secretaría de Desarrollo Humano</div>' +
+        '</div>' +
+        '<script>window.onload=function(){window.print();}<\/script>' +
+        '</body></html>';
+
+      win.document.open();
+      win.document.write(htmlDoc);
+      win.document.close();
+    }
+
+    // =========================================================================
+    // GESTIÓN, EDICIÓN COMPLETA Y APROBACIÓN DE EMPRENDEDORES (FERIA DIGITAL)
+    // =========================================================================
+    async function fetchEmprendedoresAdmin() {
+      const cont = document.getElementById('contenedorEmprendedoresAdmin');
+      try {
+        const res = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ accion: 'listarEmprendedoresAdmin', pin: localStorage.getItem('muni_pin') }),
+          redirect: 'follow'
+        });
+        const d = await res.json();
+        if (d.status === 'success') {
+          datosEmprendedores = d.emprendedores || [];
+          const cantPend = datosEmprendedores.filter(function(e) { return String(e.estado).includes('Pendiente'); }).length;
+          const badge = document.getElementById('badgeEmpPendientes');
+          if (cantPend > 0) {
+            badge.style.display = 'inline-block';
+            badge.innerText = cantPend;
+          } else {
+            badge.style.display = 'none';
+          }
+          renderEmprendedoresAdmin();
+        }
+      } catch (e) {
+        if (cont) cont.innerHTML = '<div style="padding:20px;color:var(--red);">Error al cargar emprendedores.</div>';
+      }
+    }
+
+    function marcarCambioEmpSinGuardar(id) {
+      const card = document.getElementById('card_emp_' + id);
+      const btnGuardar = document.getElementById('btn_save_emp_' + id);
+      if (card) card.classList.add('unsaved-changes');
+      if (btnGuardar) {
+        btnGuardar.classList.add('unsaved');
+        btnGuardar.innerText = '💾 Guardar Cambios *';
+      }
+    }
+
+    function renderEmprendedoresAdmin() {
+      const cont = document.getElementById('contenedorEmprendedoresAdmin');
+      const filtro = document.getElementById('filtroEstadoEmp').value;
+
+      const filtrados = datosEmprendedores.filter(function(e) {
+        if (filtro === 'TODOS') return true;
+        return String(e.estado) === filtro;
+      });
+
+      if (filtrados.length === 0) {
+        cont.innerHTML = '<div style="text-align:center; padding:35px; color:var(--muted); background:var(--card); border-radius:14px; border:1px solid var(--border);">🌱 No hay emprendedores en este estado actualmente.</div>';
+        return;
+      }
+
+      const listaBarriosBase = [
+        "Centro", "Santa Teresita", "San Cayetano", "El Cruce", "Centro 2",
+        "Luján", "25 de Mayo", "El Bordo", "Betania", "Zona Rural / Finca", "Otro Barrio"
+      ];
+
+      const listaRubrosBase = [
+        "🥖 Comidas y Pan Casero",
+        "🌾 Huerta, Campo y Granja",
+        "🧱 Albañil, Plomero y Electricista",
+        "✂️ Costura, Tejido y Artesanías",
+        "🚜 Fletes, Poda y Trabajos Rurales"
+      ];
+
+      cont.innerHTML = filtrados.map(function(emp) {
+        const estaAprobado = String(emp.estado).includes('Aprobado');
+        const estaOculto = String(emp.estado).includes('Oculto');
+
+        const badgeEstado = estaAprobado
+          ? '<span class="badge-prio prio-inf">✅ Publicado en la Feria</span>'
+          : (String(emp.estado).includes('Pendiente')
+              ? '<span class="badge-prio prio-ges">⏳ Pendiente de Aprobación</span>'
+              : '<span class="badge-prio prio-urg">❌ Oculto</span>');
+
+        const htmlFoto = (emp.foto && emp.foto.startsWith('http'))
+          ? '<a href="' + emp.foto + '" target="_blank" class="att-link">📸 Ver Foto del Producto / Trabajo</a>'
+          : '';
+
+        const opcionesBarrio = listaBarriosBase.slice();
+        if (emp.barrio && !opcionesBarrio.includes(emp.barrio)) {
+          opcionesBarrio.unshift(emp.barrio);
+        }
+        const htmlSelectBarrio = opcionesBarrio.map(function(b) {
+          return '<option value="' + b.replace(/"/g, '&quot;') + '" ' + (emp.barrio === b ? 'selected' : '') + '>📍 ' + b + '</option>';
+        }).join('');
+
+        const opcionesRubro = listaRubrosBase.slice();
+        if (emp.rubro && !opcionesRubro.includes(emp.rubro)) {
+          opcionesRubro.unshift(emp.rubro);
+        }
+        const htmlSelectRubro = opcionesRubro.map(function(rub) {
+          return '<option value="' + rub.replace(/"/g, '&quot;') + '" ' + (emp.rubro === rub ? 'selected' : '') + '>' + rub + '</option>';
+        }).join('');
+
+        let botonesAccionIzquierda = '';
+        if (estaAprobado) {
+          botonesAccionIzquierda =
+            '<button type="button" class="btn-save" id="btn_save_emp_' + emp.id + '" onclick="cambiarEstadoEmp(\'' + emp.id + '\', \'✅ Aprobado\')">💾 Guardar Cambios</button>' +
+            '<button type="button" class="btn-evidencia" onclick="cambiarEstadoEmp(\'' + emp.id + '\', \'❌ Oculto\')">⏸️ Ocultar de la Guía</button>';
+        } else if (estaOculto) {
+          botonesAccionIzquierda =
+            '<button type="button" class="btn-save" style="background:#16a34a;" onclick="cambiarEstadoEmp(\'' + emp.id + '\', \'✅ Aprobado\')">✅ Aprobar y Publicar en la Feria</button>' +
+            '<button type="button" class="btn-save" id="btn_save_emp_' + emp.id + '" onclick="cambiarEstadoEmp(\'' + emp.id + '\', \'❌ Oculto\')">💾 Guardar Cambios</button>';
+        } else {
+          botonesAccionIzquierda =
+            '<button type="button" class="btn-save" style="background:#16a34a;" onclick="cambiarEstadoEmp(\'' + emp.id + '\', \'✅ Aprobado\')">✅ Aprobar y Publicar en la Feria</button>' +
+            '<button type="button" class="btn-save" id="btn_save_emp_' + emp.id + '" onclick="cambiarEstadoEmp(\'' + emp.id + '\', \'⏳ Pendiente\')">💾 Guardar Cambios</button>' +
+            '<button type="button" class="btn-evidencia" onclick="cambiarEstadoEmp(\'' + emp.id + '\', \'❌ Oculto\')">⏸️ Ocultar de la Guía</button>';
+        }
+
+        const nombreSeguro = String(emp.nombre || '').replace(/"/g, '&quot;');
+        const telSeguro = String(emp.telefono || '').replace(/"/g, '&quot;');
+        const pinSeguro = String(emp.pin || '').replace(/"/g, '&quot;');
+
+        return '<div class="card emp-card-admin" id="card_emp_' + emp.id + '">' +
+          '<div class="card-header">' +
+            '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">' +
+              '<span class="badge-id" onclick="copiarCodigo(\'' + emp.id + '\')" title="Copiar código">' + emp.id + ' 📋</span>' +
+              badgeEstado +
+              (emp.pin ? '<span style="background:#fef3c7;color:#92400e;padding:3px 8px;border-radius:6px;font-weight:800;font-size:11.5px;">🔒 PIN Vecino: ' + emp.pin + '</span>' : '') +
+            '</div>' +
+            '<span class="time-ago">📅 ' + emp.fecha + (emp.verificador ? ' • Verificó: ' + emp.verificador : '') + '</span>' +
+          '</div>' +
+
+          '<div class="controls" style="margin-top:8px;">' +
+            '<div class="field-group">' +
+              '<label class="field-label">👤 Nombre del Emprendedor o Emprendimiento</label>' +
+              '<input type="text" id="nom_emp_' + emp.id + '" value="' + nombreSeguro + '" placeholder="Nombre del vecino o comercio" oninput="marcarCambioEmpSinGuardar(\'' + emp.id + '\')" />' +
+            '</div>' +
+
+            '<div class="field-group">' +
+              '<label class="field-label">📱 Número de Celular / WhatsApp</label>' +
+              '<input type="tel" id="tel_emp_' + emp.id + '" value="' + telSeguro + '" placeholder="Ej: 3875622260" oninput="marcarCambioEmpSinGuardar(\'' + emp.id + '\')" />' +
+            '</div>' +
+
+            '<div class="field-group">' +
+              '<label class="field-label">📍 Barrio / Zona</label>' +
+              '<select id="bar_emp_' + emp.id + '" onchange="marcarCambioEmpSinGuardar(\'' + emp.id + '\')">' +
+                htmlSelectBarrio +
+              '</select>' +
+            '</div>' +
+
+            '<div class="field-group">' +
+              '<label class="field-label">🏷️ Rubro de la Feria</label>' +
+              '<select id="rub_emp_' + emp.id + '" onchange="marcarCambioEmpSinGuardar(\'' + emp.id + '\')">' +
+                htmlSelectRubro +
+              '</select>' +
+            '</div>' +
+
+            '<div class="field-group">' +
+              '<label class="field-label">🔒 PIN de Edición (4 núm)</label>' +
+              '<input type="text" id="pin_emp_' + emp.id + '" maxlength="4" value="' + pinSeguro + '" placeholder="4 dígitos" oninput="marcarCambioEmpSinGuardar(\'' + emp.id + '\')" />' +
+            '</div>' +
+          '</div>' +
+
+          '<div class="field-group" style="margin-bottom:10px;">' +
+            '<label class="field-label">📝 Descripción del Producto o Servicio</label>' +
+            '<textarea id="desc_emp_' + emp.id + '" class="textarea-nota" style="margin-bottom:4px;" oninput="marcarCambioEmpSinGuardar(\'' + emp.id + '\')">' + (emp.descripcion || '') + '</textarea>' +
+          '</div>' +
+
+          (htmlFoto ? '<div class="attachments-box">' + htmlFoto + '</div>' : '') +
+
+          '<div class="actions">' +
+            '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
+              botonesAccionIzquierda +
+            '</div>' +
+            '<div>' +
+              '<button type="button" class="btn-wa" onclick="avisarEmprendedorWhatsApp(\'' + emp.id + '\')">📲 Contactar / Avisar por WhatsApp</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    }
+
+    function avisarEmprendedorWhatsApp(id) {
+      const nom = document.getElementById('nom_emp_' + id) ? document.getElementById('nom_emp_' + id).value.trim() : 'Vecino';
+      const tel = document.getElementById('tel_emp_' + id) ? document.getElementById('tel_emp_' + id).value.trim() : '';
+      const rub = document.getElementById('rub_emp_' + id) ? document.getElementById('rub_emp_' + id).value : '';
+      const pin = document.getElementById('pin_emp_' + id) ? document.getElementById('pin_emp_' + id).value.trim() : '';
+
+      let telWa = String(tel).replace(/\D/g, '');
+      if (telWa.length < 7) {
+        alert('⚠️ Por favor ingresá un número de celular válido en la casilla de WhatsApp del emprendedor.');
+        return;
+      }
+      if (!telWa.startsWith('54')) {
+        telWa = '549' + telWa.replace(/^0+/, '').replace(/^15/, '');
+      }
+
+      const textoPin = pin ? '\n🔒 *Tu PIN secreto para editar tu publicación cuando quieras:* ' + pin : '';
+      const msg = encodeURIComponent(
+        '¡Hola *' + nom + '*! 🎉 Te escribimos de la Secretaría de Desarrollo Humano.\n\n' +
+        'Te informamos que tu emprendimiento (*' + rub + '*) ya se encuentra verificado y publicado en la *🛒 Feria Digital y Guía de Oficios del Pueblo*.' +
+        textoPin + '\n\n¡Muchas gracias por sumarte!'
+      );
+      window.open('https://wa.me/' + telWa + '?text=' + msg, '_blank');
+    }
+
+    async function cambiarEstadoEmp(id, nuevoEstado) {
+      const nomEditado = document.getElementById('nom_emp_' + id) ? document.getElementById('nom_emp_' + id).value.trim() : '';
+      const telEditado = document.getElementById('tel_emp_' + id) ? document.getElementById('tel_emp_' + id).value.trim() : '';
+      const barEditado = document.getElementById('bar_emp_' + id) ? document.getElementById('bar_emp_' + id).value.trim() : '';
+      const rubEditado = document.getElementById('rub_emp_' + id) ? document.getElementById('rub_emp_' + id).value : '';
+      const descEditada = document.getElementById('desc_emp_' + id) ? document.getElementById('desc_emp_' + id).value.trim() : '';
+      const pinEditado = document.getElementById('pin_emp_' + id) ? document.getElementById('pin_emp_' + id).value.replace(/\D/g, '').substring(0, 4) : '';
+
+      if (!nomEditado || !telEditado) {
+        alert('⚠️ El Nombre del emprendedor y el Número de celular no pueden quedar vacíos.');
+        return;
+      }
+
+      showToast('⏳ Guardando datos del emprendedor...');
+      try {
+        const res = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            accion: 'cambiarEstadoEmprendedor',
+            pin: localStorage.getItem('muni_pin'),
+            id: id,
+            nuevoEstado: nuevoEstado,
+            nombreEditado: nomEditado,
+            telefonoEditado: telEditado,
+            barrioEditado: barEditado,
+            rubroEditado: rubEditado,
+            descripcionEditada: descEditada,
+            pinEmpEditado: pinEditado,
+            operador: localStorage.getItem('muni_op') || 'Secretario'
+          }),
+          redirect: 'follow'
+        });
+        const d = await res.json();
+        if (d.status === 'success') {
+          showToast('✅ Datos guardados (' + nuevoEstado + ')');
+          fetchEmprendedoresAdmin();
+        } else {
+          alert('No se pudo actualizar: ' + (d.mensaje || ''));
+        }
+      } catch (e) {
+        alert('Error de conexión al actualizar emprendedor.');
+      }
+    }
+
+    // =========================================================================
+    // BANDEJA DE RECLAMOS Y ESTADÍSTICAS
+    // =========================================================================
+    async function fetchReclamos() {
+      const cont = document.getElementById('contenedor');
+      cont.innerHTML = '<div style="text-align:center; padding:40px; color:var(--muted); font-weight:600;">⏳ Sincronizando reclamos y estadísticas...</div>';
+      try {
+        const res = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ accion: 'listarReclamos', pin: localStorage.getItem('muni_pin') }),
+          redirect: 'follow'
+        });
+        const d = await res.json();
+        if (d.status === 'unauthorized') {
+          alert('PIN Incorrecto');
+          logout();
+          return;
+        }
+        datos = d.reclamos || [];
+        const ahora = new Date();
+        document.getElementById('lastSyncInfo').innerText = 'Sincronizado ' + ahora.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        poblarSelectorBarrios();
+        updateKPIs();
+        generarReportes();
+        render();
+      } catch (e) {
+        cont.innerHTML = '<div style="text-align:center;color:var(--red);padding:25px;">❌ Error de conexión con Apps Script.</div>';
+      }
+    }
+
+    function updateKPIs() {
+      const total = datos.length || 1;
+      const urg = datos.filter(function(r) { return normalizarSemaforo(r.semaforo).esUrgente && r.estado !== '✅ Resuelto'; }).length;
+      const pend = datos.filter(function(r) { return String(r.estado).includes('Pendiente'); }).length;
+      const proc = datos.filter(function(r) { return String(r.estado).includes('Proceso'); }).length;
+      const res = datos.filter(function(r) { return String(r.estado).includes('Resuelto'); }).length;
+
+      document.getElementById('kpiTotal').innerText = datos.length;
+      document.getElementById('kpiUrgentes').innerText = urg;
+      document.getElementById('kpiPendientes').innerText = pend;
+      document.getElementById('kpiProceso').innerText = proc;
+      document.getElementById('kpiResueltos').innerText = res;
+
+      document.getElementById('pctUrgentes').innerText = Math.round((urg / total) * 100) + '%';
+      document.getElementById('pctPendientes').innerText = Math.round((pend / total) * 100) + '%';
+      document.getElementById('pctProceso').innerText = Math.round((proc / total) * 100) + '%';
+      document.getElementById('pctResueltos').innerText = Math.round((res / total) * 100) + '%';
+    }
+
+    function poblarSelectorBarrios() {
+      const sel = document.getElementById('filtroBarrio');
+      const valorActual = sel.value;
+      const barriosSet = new Set();
+      datos.forEach(function(r) {
+        const b = r.barrio || detectarBarrioCliente(r.pregunta);
+        r.barrioDetectado = b;
+        barriosSet.add(b);
+      });
+      const listaBarrios = Array.from(barriosSet).sort();
+      sel.innerHTML = '<option value="TODOS">📍 Todos los Barrios</option>' +
+        listaBarrios.map(function(b) { return '<option value="' + b + '">📍 ' + b + '</option>'; }).join('');
+      if (listaBarrios.includes(valorActual)) sel.value = valorActual;
+    }
+
+    function detectarBarrioCliente(texto) {
+      const m = String(texto || '').match(/\b(?:barrio|b°|bº|villa|loteo)\s+([a-záéíóúñ0-9\s]{3,20})/i);
+      if (m && m[1]) {
+        return m[1].split(/\b(?:calle|mza|casa|mi |soy |cel|tengo|hay)\b/i)[0].replace(/[.,;:]/g, '').trim();
+      }
+      const conocidos = ["Libertad", "Centro", "San Cayetano", "25 de Mayo", "Islas Malvinas", "El Bordo", "Betania", "9 de Julio", "Belgrano", "Güemes"];
+      for (let i = 0; i < conocidos.length; i++) {
+        if (String(texto || '').toLowerCase().includes(conocidos[i].toLowerCase())) return conocidos[i];
+      }
+      return "Sin especificar";
+    }
+
+    function detectarTipoEspecifico(r) {
+      const t = String(r.pregunta || '').toLowerCase();
+      if (/luz|foco|alumbrado|poste|oscur/.test(t)) return "💡 Alumbrado Público";
+      if (/calle|bache|pozo|pavimento|ripio|cordón|vereda/.test(t)) return "🚧 Calles y Baches";
+      if (/basura|escombro|limpieza|poda|maleza|desmalezado|contenedor/.test(t)) return "🌿 Limpieza, Basura y Poda";
+      if (/agua|perdida|cloaca|caño|inundacion/.test(t)) return "💧 Agua y Saneamiento";
+      if (/alimento|bolson|mercaderia|salud|remedio|medicamento|discapacidad|social|ayuda|chapa/.test(t) || normalizarSemaforo(r.semaforo).esUrgente) return "🤝 Desarrollo Humano / Social";
+      if (/proyecto|subsidio|beca|capacitacion|audiencia/.test(t)) return "🏛️ Gestión Legislativa / Trámites";
+      return "📋 Otros Reclamos y Consultas";
+    }
+
+    function normalizarSemaforo(sem) {
+      const s = String(sem || '').toUpperCase();
+      if (s.includes('🔴') || s.includes('URGENCIA')) {
+        return { texto: 'URGENCIA SOCIAL', dot: 'dot-red', clase: 'prio-urg', esUrgente: true };
+      }
+      if (s.includes('🟣') || s.includes('PROYECTO')) {
+        return { texto: 'PROYECTO PRODUCTIVO', dot: 'dot-green', clase: 'prio-visita', esUrgente: false };
+      }
+      if (s.includes('🟢') || s.includes('INFORMATIVO')) {
+        return { texto: 'INFORMATIVO', dot: 'dot-green', clase: 'prio-inf', esUrgente: false };
+      }
+      return { texto: 'RECLAMO / GESTIÓN', dot: 'dot-amber', clase: 'prio-ges', esUrgente: false };
+    }
+
+    function obtenerInfoGeolocalizacion(r) {
+      const texto = String(r.pregunta || '');
+      const matchUrl = texto.match(/https?:\/\/(?:www\.)?(?:maps\.google\.com\/[^\s\]]+|google\.com\/maps[^\s\]]+|maps\.app\.goo\.gl\/[^\s\]]+|goo\.gl\/maps\/[^\s\]]+)/i);
+      const matchCoords = texto.match(/(-2[345]\.\d{4,8})\s*,\s*(-6[3456]\.\d{4,8})/);
+
+      if (matchCoords) {
+        const coords = matchCoords[1] + ',' + matchCoords[2];
+        return {
+          tieneGpsExacto: true,
+          etiqueta: '📍 Geolocalizar Ubicación GPS',
+          urlExterna: 'https://www.google.com/maps?q=' + coords,
+          urlEmbed: 'https://maps.google.com/maps?q=' + coords + '&t=m&z=17&output=embed'
+        };
+      }
+
+      if (matchUrl) {
+        const urlLimpia = matchUrl[0].replace(/[\])]+$/, '');
+        return {
+          tieneGpsExacto: true,
+          etiqueta: '📍 Geolocalizar Ubicación GPS',
+          urlExterna: urlLimpia,
+          urlEmbed: 'https://maps.google.com/maps?q=' + encodeURIComponent(urlLimpia) + '&t=m&z=16&output=embed'
+        };
+      }
+
+      const barrio = (r.barrioDetectado && r.barrioDetectado !== 'Sin especificar') ? 'Barrio ' + r.barrioDetectado : '';
+      const matchCalle = texto.match(/\b(?:calle|av\.|avenida|pasaje|pje|mza|manzana)\s+([a-záéíóúñ0-9\s]{3,25})/i);
+      const calle = matchCalle ? matchCalle[0].trim() : '';
+      const consultaMapa = [calle, barrio, 'General Güemes, Salta, Argentina'].filter(Boolean).join(', ');
+
+      return {
+        tieneGpsExacto: false,
+        etiqueta: '📍 Geolocalizar Ubicación',
+        urlExterna: 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(consultaMapa),
+        urlEmbed: 'https://maps.google.com/maps?q=' + encodeURIComponent(consultaMapa) + '&t=m&z=15&output=embed',
+        consultaTexto: consultaMapa
+      };
+    }
+
+    function toggleMapaTarjeta(id, urlEmbed) {
+      const drawer = document.getElementById('map_drawer_' + id);
+      const iframe = document.getElementById('map_iframe_' + id);
+      if (!drawer) return;
+
+      if (drawer.style.display === 'block') {
+        drawer.style.display = 'none';
+      } else {
+        if (!iframe.src || iframe.src === 'about:blank') {
+          iframe.src = urlEmbed;
+        }
+        drawer.style.display = 'block';
+      }
+    }
+
+    function generarReportes() {
+      const total = datos.length || 1;
+      const resueltosTotal = datos.filter(function(r) { return String(r.estado).includes('Resuelto'); }).length;
+      const pctRes = Math.round((resueltosTotal / total) * 100);
+      document.getElementById('tasaResolucionBadge').textContent = '✅ Tasa de Resolución: ' + pctRes + '%';
+
+      const mapaBarrios = {};
+      datos.forEach(function(r) {
+        const b = r.barrioDetectado || r.barrio || "Sin especificar";
+        if (!mapaBarrios[b]) mapaBarrios[b] = { total: 0, resueltos: 0, urgentes: 0 };
+        mapaBarrios[b].total++;
+        if (String(r.estado).includes('Resuelto')) mapaBarrios[b].resueltos++;
+        if (normalizarSemaforo(r.semaforo).esUrgente) mapaBarrios[b].urgentes++;
+      });
+
+      const arrBarrios = Object.entries(mapaBarrios).sort(function(a, b) { return b[1].total - a[1].total; });
+      document.getElementById('repBarrios').innerHTML = arrBarrios.map(function(entry) {
+        const barrio = entry[0];
+        const info = entry[1];
+        const pct = Math.round((info.total / total) * 100);
+        const colorBarra = info.urgentes > 0 ? '#ef4444' : '#2563eb';
+        return '<div class="stat-row" onclick="filtrarPorBarrioDesdeReporte(\'' + barrio.replace(/'/g, "\\'") + '\')">' +
+          '<div class="stat-label-line">' +
+            '<span>📍 ' + barrio + (info.urgentes > 0 ? ' <small style="color:#ef4444;">(' + info.urgentes + ' urg.)</small>' : '') + '</span>' +
+            '<span>' + info.total + ' reclamo(s) • ' + pct + '% <small style="color:#10b981;">(' + info.resueltos + ' res.)</small></span>' +
+          '</div>' +
+          '<div class="stat-bar-bg"><div class="stat-bar-fill" style="width:' + Math.max(pct, 4) + '%; background:' + colorBarra + ';"></div></div>' +
+        '</div>';
+      }).join('') || '<p style="font-size:13px;color:var(--muted);">Sin datos aún</p>';
+
+      const mapaTipos = {};
+      datos.forEach(function(r) {
+        const tipo = detectarTipoEspecifico(r);
+        if (!mapaTipos[tipo]) mapaTipos[tipo] = { total: 0, resueltos: 0 };
+        mapaTipos[tipo].total++;
+        if (String(r.estado).includes('Resuelto')) mapaTipos[tipo].resueltos++;
+      });
+
+      const arrTipos = Object.entries(mapaTipos).sort(function(a, b) { return b[1].total - a[1].total; });
+      document.getElementById('repTipos').innerHTML = arrTipos.map(function(entry) {
+        const tipo = entry[0];
+        const info = entry[1];
+        const pct = Math.round((info.total / total) * 100);
+        const palabraFiltro = tipo.split(' ').slice(1).join(' ');
+        return '<div class="stat-row" onclick="filtrarPorTextoDesdeReporte(\'' + palabraFiltro + '\')">' +
+          '<div class="stat-label-line">' +
+            '<span>' + tipo + '</span>' +
+            '<span>' + info.total + ' (' + pct + '%) • <small style="color:#10b981;">' + info.resueltos + ' resueltos</small></span>' +
+          '</div>' +
+          '<div class="stat-bar-bg"><div class="stat-bar-fill" style="width:' + Math.max(pct, 4) + '%; background:#075e54;"></div></div>' +
+        '</div>';
+      }).join('') || '<p style="font-size:13px;color:var(--muted);">Sin datos aún</p>';
+
+      const mapaVecinos = {};
+      datos.forEach(function(r) {
+        const matchPrefijo = String(r.pregunta || '').match(/^\[(.*?)\]/);
+        let nombreExtraido = "Vecino Web";
+        if (matchPrefijo && matchPrefijo[1]) {
+          const partes = matchPrefijo[1].split('-');
+          if (partes.length > 1) nombreExtraido = partes.slice(1).join('-').trim();
+        }
+        const claveVecino = (r.telefono && r.telefono !== 'Web') ? r.telefono.replace(/\D/g, '') : nombreExtraido;
+        if (!mapaVecinos[claveVecino]) {
+          mapaVecinos[claveVecino] = {
+            nombre: nombreExtraido,
+            telefono: r.telefono || 'Web',
+            barrio: r.barrioDetectado || 'Sin especificar',
+            total: 0,
+            activos: 0,
+            resueltos: 0
+          };
+        }
+        mapaVecinos[claveVecino].total++;
+        if (String(r.estado).includes('Resuelto')) mapaVecinos[claveVecino].resueltos++;
+        else mapaVecinos[claveVecino].activos++;
+      });
+
+      const arrVecinos = Object.values(mapaVecinos).sort(function(a, b) { return b.total - a.total; }).slice(0, 25);
+      document.getElementById('repVecinosBody').innerHTML = arrVecinos.map(function(v) {
+        const criterio = v.telefono !== 'Web' ? v.telefono : v.nombre;
+        return '<tr>' +
+          '<td><strong>👤 ' + v.nombre + '</strong></td>' +
+          '<td>📱 ' + v.telefono + '</td>' +
+          '<td><span class="badge-barrio">📍 ' + v.barrio + '</span></td>' +
+          '<td><span class="pill-count">' + v.total + ' reclamo(s)</span></td>' +
+          '<td style="color:#d97706;font-weight:700;">⏳ ' + v.activos + '</td>' +
+          '<td style="color:#10b981;font-weight:700;">✅ ' + v.resueltos + '</td>' +
+          '<td><button type="button" class="btn-evidencia" onclick="filtrarPorTextoDesdeReporte(\'' + criterio.replace(/'/g, "\\'") + '\')">🔍 Ver casos</button></td>' +
+        '</tr>';
+      }).join('');
+    }
+
+    function filtrarPorBarrioDesdeReporte(barrio) {
+      cambiarVista('bandeja');
+      document.getElementById('filtroEst').value = 'TODOS';
+      document.getElementById('filtroBarrio').value = barrio;
+      render();
+    }
+
+    function filtrarPorTextoDesdeReporte(texto) {
+      cambiarVista('bandeja');
+      document.getElementById('filtroEst').value = 'TODOS';
+      document.getElementById('filtroBarrio').value = 'TODOS';
+      document.getElementById('filtroTxt').value = texto;
+      render();
+    }
+
+    function setFiltro(tipo) {
+      cambiarVista('bandeja');
+      document.querySelectorAll('.kpi').forEach(function(el) { el.classList.remove('active-kpi'); });
+
+      if (tipo === 'TODOS') document.getElementById('kpiCard_TODOS').classList.add('active-kpi');
+      else if (tipo === 'Urgencia') document.getElementById('kpiCard_Urgencia').classList.add('active-kpi');
+      else if (tipo.includes('Pendiente')) document.getElementById('kpiCard_Pendiente').classList.add('active-kpi');
+      else if (tipo.includes('Proceso')) document.getElementById('kpiCard_Proceso').classList.add('active-kpi');
+      else if (tipo.includes('Resuelto')) document.getElementById('kpiCard_Resuelto').classList.add('active-kpi');
+
+      document.getElementById('filtroEst').value = (tipo === 'TODOS' || tipo === 'Urgencia') ? 'TODOS' : tipo;
+      document.getElementById('filtroTxt').value = tipo === 'Urgencia' ? 'URGENCIA' : '';
+      render();
+    }
+
+    function limpiarFiltros() {
+      document.getElementById('filtroTxt').value = '';
+      document.getElementById('filtroBarrio').value = 'TODOS';
+      document.getElementById('filtroArea').value = localStorage.getItem('muni_area') || 'TODAS';
+      document.getElementById('filtroEst').value = 'ACTIVOS';
+      document.getElementById('filtroOrden').value = 'RECIENTES';
+      document.querySelectorAll('.kpi').forEach(function(el) { el.classList.remove('active-kpi'); });
+      render();
+    }
+
+    function marcarCambioSinGuardar(id) {
+      const card = document.getElementById('card_' + id);
+      const btn = document.getElementById('b_' + id);
+      if (card) card.classList.add('unsaved-changes');
+      if (btn) {
+        btn.classList.add('unsaved');
+        btn.innerText = '💾 Guardar Cambios *';
+      }
+    }
+
+    function aplicarPlantillaNota(id, textoPlantilla, nuevoEstado) {
+      const txt = document.getElementById('n_' + id);
+      if (txt) txt.value = textoPlantilla;
+      if (nuevoEstado) {
+        const selEst = document.getElementById('e_' + id);
+        if (selEst) selEst.value = nuevoEstado;
+      }
+      marcarCambioSinGuardar(id);
+    }
+
+    async function enviarWhatsAppVecino(id) {
+      const item = datos.find(function(x) { return String(x.id).toLowerCase() === String(id).toLowerCase(); });
+      if (!item) return;
+
+      if (evidenciasTmp[id]) {
+        showToast('⏳ Subiendo evidencia adjunta antes de abrir WhatsApp...');
+        await guardar(id, true);
+      }
+
+      const itemActualizado = datos.find(function(x) { return String(x.id).toLowerCase() === String(id).toLowerCase(); }) || item;
+
+      const estadoActual = document.getElementById('e_' + id) ? document.getElementById('e_' + id).value : itemActualizado.estado;
+      const areaActual = document.getElementById('a_' + id) ? document.getElementById('a_' + id).value : itemActualizado.area;
+      const respActual = document.getElementById('r_' + id) ? document.getElementById('r_' + id).value.trim() : itemActualizado.responsable;
+      const notaActual = document.getElementById('n_' + id) ? document.getElementById('n_' + id).value.trim() : itemActualizado.nota;
+      const urlEvidencia = itemActualizado.evidencia || '';
+
+      let telDigitos = String(itemActualizado.telefono || '').replace(/\D/g, '');
+      if (telDigitos.length < 7) {
+        const matchTelTexto = String(itemActualizado.pregunta || '').match(/(?:387|15|549)?\s*\d{6,10}/);
+        if (matchTelTexto) telDigitos = matchTelTexto[0].replace(/\D/g, '');
+      }
+
+      if (telDigitos.length < 7) {
+        const ingresado = prompt('📱 Este reclamo ingresó por Web sin número de teléfono.\nIngresá el número de WhatsApp del vecino (ej: 3875622260) para enviarle el informe:', '');
+        if (!ingresado) return;
+        telDigitos = ingresado.replace(/\D/g, '');
+      }
+
+      let numFinal = telDigitos;
+      if (!numFinal.startsWith('54')) {
+        numFinal = '549' + numFinal.replace(/^0+/, '').replace(/^15/, '');
+      }
+
+      let lineaEvidencia = '';
+      if (urlEvidencia && urlEvidencia.startsWith('http')) {
+        const esDoc = /\.(pdf|doc|docx)$/i.test(urlEvidencia) || itemActualizado.ultimoTipoEvidencia === 'doc';
+        lineaEvidencia = '\n' + (esDoc ? '📄 *Documento / Informe Adjunto (PDF/Word):* ' : '📸 *Foto del trabajo realizado / Evidencia:* ') + urlEvidencia;
+      }
+
+      const Lineas = [
+        '🏛️ *MUNICIPALIDAD DE ...*',
+        '*Atención Ciudadana*',
+        '',
+        '📋 *Ticket de Reclamo:* #' + itemActualizado.id,
+        '🚦 *Estado actual:* ' + estadoActual,
+        '🏢 *Área asignada:* ' + (areaActual && areaActual !== 'Sin asignar' ? areaActual : 'Coordinación General'),
+        (respActual ? '👷 *Responsable:* ' + respActual : null),
+        '📝 *Informe Municipal:* ' + (notaActual || 'Tu gestión se encuentra registrada en seguimiento por el equipo municipal.'),
+        (lineaEvidencia ? lineaEvidencia : null),
+        '',
+        '¡Gracias por comunicarte con nosotros!'
+      ].filter(function(l) { return l !== null; }).join('\n');
+
+      const urlWa = 'https://wa.me/' + numFinal + '?text=' + encodeURIComponent(Lineas);
+      window.open(urlWa, '_blank');
+    }
+
+    function render() {
+      const fTxt = document.getElementById('filtroTxt').value.toLowerCase().trim();
+      const fBarrio = document.getElementById('filtroBarrio').value;
+      const fArea = document.getElementById('filtroArea').value;
+      const fEst = document.getElementById('filtroEst').value;
+      const fOrden = document.getElementById('filtroOrden').value;
+
+      const hayFiltroExtra = fTxt !== '' || fBarrio !== 'TODOS' || fEst !== 'ACTIVOS';
+      document.getElementById('btnLimpiarFiltros').style.display = hayFiltroExtra ? 'inline-block' : 'none';
+
+      let filtrados = datos.filter(function(r) {
+        if (fBarrio !== 'TODOS' && r.barrioDetectado !== fBarrio) return false;
+        if (fArea !== 'TODAS' && r.area !== fArea) return false;
+        if (fEst === 'ACTIVOS' && r.estado === '✅ Resuelto') return false;
+        if (fEst !== 'TODOS' && fEst !== 'ACTIVOS' && r.estado !== fEst) return false;
+        if (fTxt) {
+          const semInfo = normalizarSemaforo(r.semaforo);
+          const combo = (r.id + ' ' + r.pregunta + ' ' + r.telefono + ' ' + r.nota + ' ' + r.semaforo + ' ' + semInfo.texto + ' ' + r.barrioDetectado).toLowerCase();
+          if (!combo.includes(fTxt)) return false;
+        }
+        return true;
+      });
+
+      if (fOrden === 'URGENTES') {
+        filtrados.sort(function(a, b) {
+          const uA = normalizarSemaforo(a.semaforo).esUrgente ? 1 : 0;
+          const uB = normalizarSemaforo(b.semaforo).esUrgente ? 1 : 0;
+          return uB - uA;
+        });
+      } else if (fOrden === 'ANTIGUOS') {
+        filtrados = filtrados.slice().reverse();
+      }
+
+      document.getElementById('contadorResultados').innerText = 'Mostrando ' + filtrados.length + ' de ' + datos.length + ' reclamos registrados';
+
+      const cont = document.getElementById('contenedor');
+      if (filtrados.length === 0) {
+        cont.innerHTML = '<div style="text-align:center; padding:40px; color:var(--muted); background:var(--card); border-radius:14px; border:1px solid var(--border);">🎉 No hay reclamos que coincidan con este filtro.</div>';
+        return;
+      }
+
+      cont.innerHTML = filtrados.map(function(r) {
+        const semObj = normalizarSemaforo(r.semaforo);
+        const clsBorde = r.estado === '✅ Resuelto' ? 'resuelto' : (semObj.esUrgente ? 'urgente' : 'gestion');
+        const geo = obtenerInfoGeolocalizacion(r);
+
+        const preguntaLimpia = String(r.pregunta || '').replace(/\[📍\s*Ubicación GPS:\s*https?:\/\/[^\]]+\]/gi, '📍 <em>(Ubicación GPS exacta adjuntada por el vecino — tocá "Geolocalizar Ubicación" abajo)</em>');
+
+        const listaLinks = String(r.archivo || '').split(' | ').map(function(s) { return s.trim(); }).filter(function(s) { return s.startsWith('http'); });
+        const htmlAdjuntos = listaLinks.map(function(url, idx) {
+          return '<a href="' + url + '" target="_blank" class="att-link">📎 Ver Adjunto ' + (listaLinks.length > 1 ? (idx + 1) : 'del Vecino') + '</a>';
+        }).join('');
+
+        const htmlEvidencia = (r.evidencia && r.evidencia.startsWith('http'))
+          ? '<a href="' + r.evidencia + '" target="_blank" class="att-link" style="background:#dcfce7;color:#166534;border-color:#86efac;">📁 Ver Evidencia / Documento Cargado</a>'
+          : '';
+
+        const claseBtnGeo = geo.tieneGpsExacto ? 'btn-evidencia btn-geo-gps' : 'btn-evidencia btn-geo-search';
+
+        return '<div class="card ' + clsBorde + '" id="card_' + r.id + '">' +
+          '<div class="card-header">' +
+            '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">' +
+              '<span class="badge-id" onclick="copiarCodigo(\'' + r.id + '\')" title="Clic para copiar código">#' + r.id + ' 📋</span>' +
+              '<span class="badge-prio ' + semObj.clase + '"><span class="dot ' + semObj.dot + '"></span> ' + semObj.texto + '</span>' +
+              '<span class="badge-barrio">📍 ' + (r.barrioDetectado || 'Sin especificar') + '</span>' +
+              '<span>📱 ' + r.telefono + '</span>' +
+              (geo.tieneGpsExacto ? '<span style="background:#dbeafe;color:#1e40af;padding:3px 8px;border-radius:6px;font-weight:700;font-size:11.5px;">🛰️ Con GPS</span>' : '') +
+            '</div>' +
+            '<span class="time-ago">📅 ' + r.fecha + (r.fechaAct ? ' • Act: ' + r.fechaAct : '') + '</span>' +
+          '</div>' +
+
+          '<div class="card-body">' + preguntaLimpia + '</div>' +
+
+          ((htmlAdjuntos || htmlEvidencia) ? '<div class="attachments-box">' + htmlAdjuntos + htmlEvidencia + '</div>' : '') +
+
+          '<div class="map-drawer" id="map_drawer_' + r.id + '">' +
+            '<div class="map-drawer-header">' +
+              '<span>' + (geo.tieneGpsExacto ? '🛰️ Coordenadas GPS enviadas por el vecino' : '🗺️ Ubicación aproximada: ' + geo.consultaTexto) + '</span>' +
+              '<div style="display:flex;gap:8px;align-items:center;">' +
+                '<a href="' + geo.urlExterna + '" target="_blank" style="color:#1d4ed8;text-decoration:underline;">Abrir en Google Maps ↗</a>' +
+                '<button type="button" onclick="toggleMapaTarjeta(\'' + r.id + '\')" style="border:none;background:transparent;cursor:pointer;font-weight:800;color:#1e3a8a;">✖ Cerrar</button>' +
+              '</div>' +
+            '</div>' +
+            '<iframe id="map_iframe_' + r.id + '" src="about:blank" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>' +
+          '</div>' +
+
+          '<div class="controls">' +
+            '<div class="field-group">' +
+              '<label class="field-label">Estado de Gestión</label>' +
+              '<select id="e_' + r.id + '" onchange="marcarCambioSinGuardar(\'' + r.id + '\')">' +
+                '<option value="⏳ Pendiente" ' + (r.estado.includes('Pendiente') ? 'selected' : '') + '>⏳ Pendiente</option>' +
+                '<option value="🛠️ En Proceso" ' + (r.estado.includes('Proceso') ? 'selected' : '') + '>🛠️ En Proceso</option>' +
+                '<option value="✅ Resuelto" ' + (r.estado.includes('Resuelto') ? 'selected' : '') + '>✅ Resuelto</option>' +
+              '</select>' +
+            '</div>' +
+
+            '<div class="field-group">' +
+              '<label class="field-label">Secretaría / Área Asignada</label>' +
+              '<select id="a_' + r.id + '" onchange="marcarCambioSinGuardar(\'' + r.id + '\')">' +
+                '<option value="Sin asignar" ' + (r.area === 'Sin asignar' ? 'selected' : '') + '>⚠️ Sin asignar</option>' +
+                '<option value="Obras y Servicios" ' + (r.area === 'Obras y Servicios' ? 'selected' : '') + '>🛠️ Obras y Servicios</option>' +
+                '<option value="Alumbrado Público" ' + (r.area === 'Alumbrado Público' ? 'selected' : '') + '>💡 Alumbrado Público</option>' +
+                '<option value="Limpieza y Poda" ' + (r.area === 'Limpieza y Poda' ? 'selected' : '') + '>🌿 Limpieza y Poda</option>' +
+                '<option value="Desarrollo Humano" ' + (r.area === 'Desarrollo Humano' ? 'selected' : '') + '>🤝 Desarrollo Humano</option>' +
+                '<option value="Despacho del Intendente" ' + (r.area === 'Despacho del Intendente' ? 'selected' : '') + '>🏛️ Despacho del Intendente</option>' +
+              '</select>' +
+            '</div>' +
+
+            '<div class="field-group">' +
+              '<label class="field-label">Responsable / Cuadrilla</label>' +
+              '<input type="text" id="r_' + r.id + '" value="' + (r.responsable || localStorage.getItem('muni_op') || '') + '" placeholder="Nombre del operador o capataz" oninput="marcarCambioSinGuardar(\'' + r.id + '\')" />' +
+            '</div>' +
+          '</div>' +
+
+          '<div class="field-group" style="margin-bottom:4px;">' +
+            '<label class="field-label">Nota Oficial para el Vecino (Respuestas rápidas con 1 clic)</label>' +
+            '<div class="quick-notes-bar">' +
+              '<button type="button" class="quick-note-chip" onclick="aplicarPlantillaNota(\'' + r.id + '\', \'Su reclamo fue derivado a la cuadrilla municipal correspondiente para su programación.\', \'🛠️ En Proceso\')">👷 Derivado a cuadrilla</button>' +
+              '<button type="button" class="quick-note-chip" onclick="aplicarPlantillaNota(\'' + r.id + '\', \'El equipo técnico se encuentra trabajando en la zona para resolver el inconveniente.\', \'🛠️ En Proceso\')">🚜 En ejecución</button>' +
+              '<button type="button" class="quick-note-chip" onclick="aplicarPlantillaNota(\'' + r.id + '\', \'El trabajo fue completado satisfactoriamente. ¡Gracias por ayudarnos a mejorar el municipio!\', \'✅ Resuelto\')">✅ Trabajo finalizado</button>' +
+              '<button type="button" class="quick-note-chip" onclick="aplicarPlantillaNota(\'' + r.id + '\', \'Nos comunicamos para coordinar una visita técnica en su domicilio.\', null)">📞 Coordinar visita</button>' +
+            '</div>' +
+          '</div>' +
+
+          '<textarea id="n_' + r.id + '" class="textarea-nota" placeholder="Escribí una nota oficial para el vecino o seleccioná una plantilla arriba..." oninput="marcarCambioSinGuardar(\'' + r.id + '\')">' + (r.nota || '') + '</textarea>' +
+
+          '<div class="actions">' +
+            '<div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">' +
+              '<input type="file" id="f_img_' + r.id + '" accept="image/*" style="display:none" onchange="prepEv(\'' + r.id + '\', event, \'foto\')" />' +
+              '<input type="file" id="f_doc_' + r.id + '" accept="application/pdf,.pdf,.doc,.docx" style="display:none" onchange="prepEv(\'' + r.id + '\', event, \'doc\')" />' +
+              '<button type="button" class="btn-evidencia" onclick="document.getElementById(\'f_img_' + r.id + '\').click()" id="l_img_' + r.id + '">📸 Adjuntar Foto</button>' +
+              '<button type="button" class="btn-evidencia" onclick="document.getElementById(\'f_doc_' + r.id + '\').click()" id="l_doc_' + r.id + '">📄 Adjuntar PDF / Word</button>' +
+              '<button type="button" class="' + claseBtnGeo + '" onclick="toggleMapaTarjeta(\'' + r.id + '\', \'' + geo.urlEmbed.replace(/'/g, "\\'") + '\')" title="Ver ubicación en el mapa">' + geo.etiqueta + '</button>' +
+              '<a href="' + geo.urlExterna + '" target="_blank" class="btn-evidencia" title="Abrir navegación en Google Maps">↗ Maps</a>' +
+            '</div>' +
+
+            '<div style="display:flex; gap:10px; align-items:center;">' +
+              '<button type="button" class="btn-wa" onclick="enviarWhatsAppVecino(\'' + r.id + '\')" title="Enviar Ticket, Estado, Área, Informe y Foto/PDF por WhatsApp">📲 Enviar WhatsApp</button>' +
+              '<button type="button" class="btn-save" id="b_' + r.id + '" onclick="guardar(\'' + r.id + '\', false)">💾 Guardar</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    }
+
+    function prepEv(id, e, tipoOrigen) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      if (file.size > 15 * 1024 * 1024) {
+        alert('⚠️ El archivo supera el límite de 15 MB.');
+        return;
+      }
+
+      marcarCambioSinGuardar(id);
+
+      if (file.type.startsWith('image/')) {
+        const r = new FileReader();
+        r.onload = function(ev) {
+          const img = new Image();
+          img.onload = function() {
+            const cvs = document.createElement('canvas');
+            const max = 950;
+            let w = img.width, h = img.height;
+            if (w > max) { h = Math.round((h * max) / w); w = max; }
+            cvs.width = w; cvs.height = h;
+            cvs.getContext('2d').drawImage(img, 0, 0, w, h);
+            evidenciasTmp[id] = {
+              nom: file.name.replace(/\.[^/.]+$/, "") + ".jpg",
+              mime: 'image/jpeg',
+              tipo: 'foto',
+              base: cvs.toDataURL('image/jpeg', 0.75).split(',')[1]
+            };
+            document.getElementById('l_img_' + id).innerText = '✅ Foto: ' + evidenciasTmp[id].nom;
+            document.getElementById('l_doc_' + id).innerText = '📄 Adjuntar PDF / Word';
+            showToast('📸 Foto lista. Se subirá al Guardar o al Enviar WhatsApp.');
+          };
+          img.src = ev.target.result;
+        };
+        r.readAsDataURL(file);
+      } else {
+        const r = new FileReader();
+        r.onload = function(ev) {
+          const ext = file.name.toLowerCase();
+          let mimeDetectado = file.type;
+          if (!mimeDetectado) {
+            if (ext.endsWith('.pdf')) mimeDetectado = 'application/pdf';
+            else if (ext.endsWith('.docx')) mimeDetectado = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+            else if (ext.endsWith('.doc')) mimeDetectado = 'application/msword';
+            else mimeDetectado = 'application/octet-stream';
+          }
+          evidenciasTmp[id] = {
+            nom: file.name,
+            mime: mimeDetectado,
+            tipo: 'doc',
+            base: ev.target.result.split(',')[1]
+          };
+          document.getElementById('l_doc_' + id).innerText = '✅ Doc: ' + file.name;
+          document.getElementById('l_img_' + id).innerText = '📸 Adjuntar Foto';
+          showToast('📄 Documento listo. Se subirá al Guardar o al Enviar WhatsApp.');
+        };
+        r.readAsDataURL(file);
+      }
+    }
+
+    async function guardar(id, silencioso) {
+      const btn = document.getElementById('b_' + id);
+      if (btn) {
+        btn.innerText = '⏳ Guardando...';
+        btn.disabled = true;
+      }
+
+      try {
+        const tipoEv = evidenciasTmp[id] ? evidenciasTmp[id].tipo : null;
+        const payload = {
+          accion: 'actualizarReclamo',
+          pin: localStorage.getItem('muni_pin'),
+          id: id,
+          estado: document.getElementById('e_' + id).value,
+          area: document.getElementById('a_' + id).value,
+          responsable: document.getElementById('r_' + id).value.trim(),
+          nota: document.getElementById('n_' + id).value.trim(),
+          evidenciaBase64: evidenciasTmp[id] ? evidenciasTmp[id].base : null,
+          evidenciaNombre: evidenciasTmp[id] ? evidenciasTmp[id].nom : null,
+          evidenciaMime: evidenciasTmp[id] ? evidenciasTmp[id].mime : null
+        };
+
+        const res = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(payload),
+          redirect: 'follow'
+        });
+        const d = await res.json();
+
+        if (d.status === 'success') {
+          const item = datos.find(function(x) { return String(x.id).toLowerCase() === String(id).toLowerCase(); });
+          if (item) {
+            item.estado = payload.estado;
+            item.area = payload.area;
+            item.nota = payload.nota;
+            item.responsable = payload.responsable;
+            item.fechaAct = d.fechaAct;
+            if (d.evidencia) item.evidencia = d.evidencia;
+            if (tipoEv) item.ultimoTipoEvidencia = tipoEv;
+          }
+          delete evidenciasTmp[id];
+          updateKPIs();
+          generarReportes();
+          if (!silencioso) {
+            render();
+            showToast('✅ Reclamo #' + id + ' guardado (' + payload.estado + ')');
+          }
+        } else if (d.status === 'unauthorized') {
+          alert('⚠️ PIN incorrecto. Volvé a iniciar sesión.');
+          logout();
+        } else {
+          alert('⚠️ No se pudo guardar: ' + (d.mensaje || d.detalle || 'Verificá haber publicado Nueva Versión en Apps Script.'));
+        }
+      } catch (e) {
+        alert('❌ Error al conectar con el servidor: ' + e.message);
+      } finally {
+        const btnActual = document.getElementById('b_' + id);
+        if (btnActual) {
+          btnActual.classList.remove('unsaved');
+          btnActual.innerText = '💾 Guardar';
+          btnActual.disabled = false;
+        }
+      }
+    }
+
+    function exportarCSV() {
+      if (!datos.length) return alert('No hay datos para exportar');
+      const encabezados = ['Codigo', 'Fecha', 'Barrio', 'Telefono', 'Semaforo', 'Estado', 'Area', 'Responsable', 'Detalle', 'Nota_Municipal', 'Evidencia_URL'];
+      const filas = datos.map(function(r) {
+        return [
+          r.id, r.fecha, r.barrioDetectado || '', r.telefono, r.semaforo, r.estado, r.area, r.responsable,
+          '"' + String(r.pregunta || '').replace(/"/g, '""') + '"',
+          '"' + String(r.nota || '').replace(/"/g, '""') + '"',
+          r.evidencia || ''
+        ];
+      });
+      const csvContent = '\uFEFF' + [encabezados.join(';'), ...filas.map(function(e) { return e.join(';'); })].join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'Reporte_Reclamos_General_Güemes_' + new Date().toISOString().slice(0, 10) + '.csv';
+      a.click();
+    }
+  </script>
+</body>
+</html>
