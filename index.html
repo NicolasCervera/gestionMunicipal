@@ -1568,7 +1568,7 @@
 
   <script>
     // URL de tu implementación de Google Apps Script
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyVNJosYYBbuYVLxNAP0hRw8wqNOnDDu6OQzXS4NYIOJoZSxPqNVtYbOxpcl68eViY/exec';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxohT-V87l-F22ogoL59Xg6zQJ1fX83r0HYuPjBfPWnZ8y0rFkbzBXxmioUvIKuFRtZ/exec';
 
     const MAX_ARCHIVOS = 3;
     let historialChat = JSON.parse(localStorage.getItem('muni_chat_hist') || '[]');
@@ -1964,7 +1964,7 @@
       }
     }
 
-    async function enviarProyectoProductivo() {
+
       const nombre = document.getElementById('proyNombre').value.trim();
       const telefono = document.getElementById('proyTelefono').value.trim();
       const barrio = document.getElementById('proyBarrio').value;
@@ -2187,7 +2187,7 @@
       }
     }
 
-    async function enviarRegistroEmprendedor() {
+
       const nombre = document.getElementById('empNombre').value.trim();
       const barrio = document.getElementById('empBarrio').value;
       const telefono = document.getElementById('empTelefono').value.trim();
@@ -2247,7 +2247,7 @@
         btnFoto.classList.remove('active-gps');
 
         cerrarModalFeria();
-        agregarMensajeUI('bot', data.respuesta || `🎉 ¡Felicitaciones **${nombre}**! Ya recibimos los datos de tu emprendimiento.`);
+        agregarMensajeUI('bot', data.respuesta || `🎉 ¡Felicitaciones **${nombre}**! Ya recibimos los datos de tu emprendimiento, ahora el siguiente paso es verificar tu emprendimiento, serás notificado por WhatsApp.`);
       } catch (e) {
         mostrarToast('⚠️ Error de conexión. Intentá de nuevo.');
       } finally {
@@ -2366,6 +2366,156 @@
       }
     }
 
+    async function enviarProyectoProductivo() {
+      const nombre = document.getElementById('proyNombre').value.trim();
+      const telefono = document.getElementById('proyTelefono').value.trim();
+      const barrio = document.getElementById('proyBarrio').value;
+      const rubro = document.getElementById('proyRubro').value;
+      const etapa = document.getElementById('proyEtapa').value;
+      const necesidad = document.getElementById('proyNecesidad').value.trim();
+      const familia = document.getElementById('proyFamilia').value;
+      const pinVec = document.getElementById('vecinoPin').value.trim();
+
+      if (!nombre || !telefono || !necesidad) {
+        mostrarToast('⚠️ Completá tu Nombre, tu WhatsApp y qué herramientas o materiales necesitás');
+        return;
+      }
+
+      document.getElementById('vecinoNombre').value = nombre;
+      document.getElementById('vecinoBarrio').value = barrio;
+      document.getElementById('vecinoTelefono').value = telefono;
+      guardarDatosVecino();
+
+      const btn = document.getElementById('btnEnviarProyecto');
+      btn.disabled = true;
+      btn.textContent = '⏳ Redactando tu Carpeta Técnica con IA...';
+
+      const resumenUsuario = `🚀 *Solicitud de Proyecto Productivo (${rubro})*\n• *Etapa:* ${etapa}\n• *Solicitud:* ${necesidad}\n• *Impacto familiar:* ${familia}`;
+
+      cerrarModalProyecto();
+      agregarMensajeUI('user', resumenUsuario, true);
+
+      const typing = document.getElementById('typingIndicator');
+      typing.style.display = 'block';
+      scrollSuaveAlFinal();
+
+      try {
+        const res = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            accion: 'presentarProyectoProductivo',
+            nombre, telefono, barrio,
+            pinVecino: pinVec,
+            rubro, etapa, necesidad, familia,
+            fotoBase64: fotoProyectoTmp ? fotoProyectoTmp.fileBase64 : null,
+            fotoNombre: fotoProyectoTmp ? fotoProyectoTmp.fileName : null,
+            fotoMime: fotoProyectoTmp ? fotoProyectoTmp.mimeType : null
+          }),
+          redirect: 'follow'
+        });
+
+        const data = await res.json();
+        typing.style.display = 'none';
+
+        if (data.status !== 'success') {
+          mostrarToast('⚠️ ' + (data.mensaje || 'Error al registrar el proyecto'));
+          agregarMensajeUI('bot', '⚠️ No pudimos registrar el proyecto: ' + (data.mensaje || 'Verificá la publicación del script.'));
+          return;
+        }
+
+        if (data.pinAsignado) {
+          document.getElementById('vecinoPin').value = data.pinAsignado;
+          guardarDatosVecino();
+        }
+        if (data.id) registrarTicketLocal(data.id);
+
+        document.getElementById('proyNecesidad').value = '';
+        fotoProyectoTmp = null;
+        const btnFoto = document.getElementById('btnSubirFotoProy');
+        btnFoto.innerHTML = '📸 Sacar o Subir una Foto de mi trabajo';
+        btnFoto.classList.remove('active-gps');
+
+        // Única respuesta oficial proveniente del backend
+        agregarMensajeUI('bot', data.respuesta);
+      } catch (err) {
+        typing.style.display = 'none';
+        agregarMensajeUI('bot', '⚠️ Hubo una demora en la conexión. Intentá nuevamente.');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '🚀 Armar mi Carpeta Técnica en PDF y Enviar';
+      }
+    }
+
+    async function enviarRegistroEmprendedor() {
+      const nombre = document.getElementById('empNombre').value.trim();
+      const barrio = document.getElementById('empBarrio').value;
+      const telefono = document.getElementById('empTelefono').value.trim();
+      const rubro = document.getElementById('empRubro').value;
+      const descripcion = document.getElementById('empDescripcion').value.trim();
+      const pinElegido = document.getElementById('empPinCrear').value.replace(/\D/g, '').substring(0, 4);
+
+      if (!nombre || !telefono || !descripcion) {
+        mostrarToast('⚠️ Completá tu Nombre, tu WhatsApp y qué vendés o hacés');
+        return;
+      }
+
+      const btn = document.getElementById('btnEnviarEmp');
+      btn.disabled = true;
+      btn.textContent = '⏳ Enviando tu emprendimiento...';
+
+      try {
+        const res = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            accion: 'registrarEmprendedor',
+            nombre, barrio, telefono, rubro, descripcion,
+            pinVecino: pinElegido || document.getElementById('vecinoPin').value.trim(),
+            fotoBase64: fotoEmprendedorTmp ? fotoEmprendedorTmp.fileBase64 : null,
+            fotoNombre: fotoEmprendedorTmp ? fotoEmprendedorTmp.fileName : null,
+            fotoMime: fotoEmprendedorTmp ? fotoEmprendedorTmp.mimeType : null
+          }),
+          redirect: 'follow'
+        });
+        const data = await res.json();
+
+        if (data.status !== 'success') {
+          mostrarToast('⚠️ ' + (data.mensaje || 'No se pudo guardar el emprendimiento'));
+          return;
+        }
+
+        if (data.id) localStorage.setItem('muni_mi_emp_id', data.id);
+        if (data.pinAsignado) {
+          document.getElementById('vecinoPin').value = data.pinAsignado;
+          document.getElementById('editEmpPinAcceso').value = data.pinAsignado;
+        }
+        if (telefono) {
+          document.getElementById('vecinoTelefono').value = telefono;
+          document.getElementById('editEmpBusqueda').value = telefono;
+        }
+        if (nombre && !document.getElementById('vecinoNombre').value) {
+          document.getElementById('vecinoNombre').value = nombre;
+        }
+        guardarDatosVecino();
+
+        document.getElementById('empDescripcion').value = '';
+        fotoEmprendedorTmp = null;
+        const btnFoto = document.getElementById('btnSubirFotoEmp');
+        btnFoto.innerHTML = '📸 Sacar o Subir una Foto de lo que hago';
+        btnFoto.classList.remove('active-gps');
+
+        cerrarModalFeria();
+        // Única respuesta oficial proveniente del backend
+        agregarMensajeUI('bot', data.respuesta);
+      } catch (e) {
+        mostrarToast('⚠️ Error de conexión. Intentá de nuevo.');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '✅ Enviar para Publicar en la Feria';
+      }
+    }
+
     async function guardarCambiosMiEmprendimiento() {
       const idEmp = document.getElementById('editEmpIdActual').value.trim();
       const pin = document.getElementById('editEmpPinAcceso').value.replace(/\D/g, '').substring(0, 4);
@@ -2390,13 +2540,7 @@
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify({
             accion: 'editarMiEmprendimientoVecino',
-            id: idEmp,
-            pin: pin,
-            nombre: nombre,
-            barrio: barrio,
-            telefono: telefono,
-            rubro: rubro,
-            descripcion: descripcion,
+            id: idEmp, pin, nombre, barrio, telefono, rubro, descripcion,
             fotoBase64: fotoEditarEmprendedorTmp ? fotoEditarEmprendedorTmp.fileBase64 : null,
             fotoNombre: fotoEditarEmprendedorTmp ? fotoEditarEmprendedorTmp.fileName : null,
             fotoMime: fotoEditarEmprendedorTmp ? fotoEditarEmprendedorTmp.mimeType : null
@@ -2406,10 +2550,11 @@
         const data = await res.json();
 
         if (data.status === 'success') {
-          mostrarToast('✅ ¡Tus datos fueron actualizados!');
+          mostrarToast(data.mensaje);
           volverALoginEditarEmp();
           cerrarModalFeria();
-          agregarMensajeUI('bot', data.respuesta || `✅ ¡Listo **${nombre}**! Todos los cambios de tu emprendimiento fueron guardados correctamente.`);
+          // Única respuesta oficial proveniente del backend
+          agregarMensajeUI('bot', data.respuesta);
         } else {
           mostrarToast(data.mensaje || '⚠️ No se pudieron guardar los cambios');
         }
@@ -2420,6 +2565,7 @@
         btn.textContent = '💾 Guardar Todos Mis Cambios';
       }
     }
+
 
     // Dictado por voz para cualquier campo de texto de los formularios
     function dictarEnCampo(idCampo) {

@@ -536,7 +536,7 @@
 
   <script>
     // URL corregida con una sola "c" al final (/exec)
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyVNJosYYBbuYVLxNAP0hRw8wqNOnDDu6OQzXS4NYIOJoZSxPqNVtYbOxpcl68eViY/exec';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxohT-V87l-F22ogoL59Xg6zQJ1fX83r0HYuPjBfPWnZ8y0rFkbzBXxmioUvIKuFRtZ/exec';
 
     let datos = [];
     let datosEmprendedores = [];
@@ -1007,12 +1007,15 @@
       ];
 
       const listaRubrosBase = [
-        "🥖 Comidas y Pan Casero",
-        "🌾 Huerta, Campo y Granja",
-        "🧱 Albañil, Plomero y Electricista",
-        "✂️ Costura, Tejido y Artesanías",
-        "🚜 Fletes, Poda y Trabajos Rurales"
-      ];
+      "🥖 Comidas y Pan Casero",
+      "🌾 Huerta, Campo y Granja",
+      "🧱 Albañil, Plomero y Electricista",
+      "✂️ Costura, Tejido y Artesanías",
+      "🚜 Fletes, Poda y Trabajos Rurales",
+      "💍 Bijoutería",
+      "💇‍♀️ Peluquería",
+      "💅 Belleza cosmética o uñas y pestañas"
+    ];
 
       cont.innerHTML = filtrados.map(function(emp) {
         const estaAprobado = String(emp.estado).includes('Aprobado');
@@ -1196,33 +1199,6 @@
     // =========================================================================
     // BANDEJA DE RECLAMOS Y ESTADÍSTICAS
     // =========================================================================
-    async function fetchReclamos() {
-      const cont = document.getElementById('contenedor');
-      cont.innerHTML = '<div style="text-align:center; padding:40px; color:var(--muted); font-weight:600;">⏳ Sincronizando reclamos y estadísticas...</div>';
-      try {
-        const res = await fetch(SCRIPT_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify({ accion: 'listarReclamos', pin: localStorage.getItem('muni_pin') }),
-          redirect: 'follow'
-        });
-        const d = await res.json();
-        if (d.status === 'unauthorized') {
-          alert('PIN Incorrecto');
-          logout();
-          return;
-        }
-        datos = d.reclamos || [];
-        const ahora = new Date();
-        document.getElementById('lastSyncInfo').innerText = 'Sincronizado ' + ahora.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        poblarSelectorBarrios();
-        updateKPIs();
-        generarReportes();
-        render();
-      } catch (e) {
-        cont.innerHTML = '<div style="text-align:center;color:var(--red);padding:25px;">❌ Error de conexión con Apps Script.</div>';
-      }
-    }
 
     function updateKPIs() {
       const total = datos.length || 1;
@@ -1243,20 +1219,6 @@
       document.getElementById('pctResueltos').innerText = Math.round((res / total) * 100) + '%';
     }
 
-    function poblarSelectorBarrios() {
-      const sel = document.getElementById('filtroBarrio');
-      const valorActual = sel.value;
-      const barriosSet = new Set();
-      datos.forEach(function(r) {
-        const b = r.barrio || detectarBarrioCliente(r.pregunta);
-        r.barrioDetectado = b;
-        barriosSet.add(b);
-      });
-      const listaBarrios = Array.from(barriosSet).sort();
-      sel.innerHTML = '<option value="TODOS">📍 Todos los Barrios</option>' +
-        listaBarrios.map(function(b) { return '<option value="' + b + '">📍 ' + b + '</option>'; }).join('');
-      if (listaBarrios.includes(valorActual)) sel.value = valorActual;
-    }
 
     function detectarBarrioCliente(texto) {
       const m = String(texto || '').match(/\b(?:barrio|b°|bº|villa|loteo)\s+([a-záéíóúñ0-9\s]{3,20})/i);
@@ -1293,6 +1255,70 @@
         return { texto: 'INFORMATIVO', dot: 'dot-green', clase: 'prio-inf', esUrgente: false };
       }
       return { texto: 'RECLAMO / GESTIÓN', dot: 'dot-amber', clase: 'prio-ges', esUrgente: false };
+    }
+
+    async function fetchReclamos() {
+      const cont = document.getElementById('contenedor');
+      cont.innerHTML = '<div style="text-align:center; padding:40px; color:var(--muted); font-weight:600;">⏳ Sincronizando reclamos y estadísticas...</div>';
+      try {
+        const res = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ accion: 'listarReclamos', pin: localStorage.getItem('muni_pin') }),
+          redirect: 'follow'
+        });
+        const d = await res.json();
+        if (d.status === 'unauthorized') {
+          alert('PIN Incorrecto');
+          logout();
+          return;
+        }
+        if (d.status === 'error') {
+          cont.innerHTML = '<div style="text-align:center;color:var(--red);padding:25px;">⚠️ Error del servidor: ' + (d.mensaje || d.detalle) + '</div>';
+          return;
+        }
+
+        // Mostrar link directo al Google Sheet donde se guardan los datos
+        if (d.sheetUrl) {
+          let btnSheet = document.getElementById('btnVerSheet');
+          if (!btnSheet) {
+            btnSheet = document.createElement('a');
+            btnSheet.id = 'btnVerSheet';
+            btnSheet.target = '_blank';
+            btnSheet.className = 'btn-top';
+            btnSheet.style.cssText = 'background:#16a34a;border-color:#22c55e;text-decoration:none;';
+            document.querySelector('.topbar > div:last-child').prepend(btnSheet);
+          }
+          btnSheet.href = d.sheetUrl;
+          btnSheet.innerText = '📊 Abrir Sheet (' + (d.sheetNombre || 'Datos') + ')';
+        }
+
+        datos = d.reclamos || [];
+        const ahora = new Date();
+        document.getElementById('lastSyncInfo').innerText = 'Sincronizado ' + ahora.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        poblarSelectorBarrios();
+        updateKPIs();
+        generarReportes();
+        render();
+      } catch (e) {
+        cont.innerHTML = '<div style="text-align:center;color:var(--red);padding:25px;">❌ Error de conexión con Apps Script.</div>';
+      }
+    }
+
+    function poblarSelectorBarrios() {
+      const sel = document.getElementById('filtroBarrio');
+      const valorActual = sel.value;
+      const barriosSet = new Set();
+      datos.forEach(function(r) {
+        // Usa directamente el barrio extraído por el backend (sin duplicar lógica en el cliente)
+        const b = r.barrio || "Sin especificar";
+        r.barrioDetectado = b;
+        barriosSet.add(b);
+      });
+      const listaBarrios = Array.from(barriosSet).sort();
+      sel.innerHTML = '<option value="TODOS">📍 Todos los Barrios</option>' +
+        listaBarrios.map(function(b) { return '<option value="' + b + '">📍 ' + b + '</option>'; }).join('');
+      if (listaBarrios.includes(valorActual)) sel.value = valorActual;
     }
 
     function obtenerInfoGeolocalizacion(r) {
