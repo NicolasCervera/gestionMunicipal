@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>Asistente Ciudadano</title>
+  <title>Asistente Ciudadano — Dpto. General Güemes</title>
   <style>
     :root {
       --primary: #075e54;
@@ -12,6 +12,8 @@
       --accent: #25d366;
       --purple: #6d28d9;
       --teal-proy: #0d9488;
+      --amber: #d97706;
+      --blue: #2563eb;
       --bg-app: #d1d7db;
       --bg-chat: #efeae2;
       --user-msg: #d9fdd3;
@@ -87,7 +89,7 @@
       transform: translateX(-50%) translateY(0);
     }
 
-    /* MENÚ LATERAL IZQUIERDO (DRAWER ACCESIBLE) */
+    /* MENÚ LATERAL IZQUIERDO POR CARPETAS (ACORDEÓN) */
     .drawer-overlay {
       position: absolute;
       inset: 0;
@@ -107,8 +109,8 @@
       top: 0;
       left: 0;
       bottom: 0;
-      width: 86%;
-      max-width: 340px;
+      width: 88%;
+      max-width: 350px;
       background: #ffffff;
       z-index: 100;
       transform: translateX(-100%);
@@ -123,7 +125,7 @@
     .drawer-header {
       background: var(--primary-gradient);
       color: #fff;
-      padding: 18px 16px;
+      padding: 16px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -147,28 +149,99 @@
     .drawer-body {
       flex: 1;
       overflow-y: auto;
-      padding: 14px 12px;
+      padding: 12px;
       display: flex;
       flex-direction: column;
       gap: 10px;
     }
-    .drawer-section-title {
-      font-size: 12px;
-      font-weight: 800;
-      text-transform: uppercase;
-      color: #475569;
-      padding: 4px 6px 2px 6px;
-      letter-spacing: 0.4px;
+
+    /* Estilos de Carpetas del Menú */
+    .folder-card {
+      border: 1.5px solid #e2e8f0;
+      border-radius: 14px;
+      overflow: hidden;
+      background: #ffffff;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
     }
+    .folder-card.open {
+      border-color: var(--primary);
+      box-shadow: 0 4px 12px rgba(7, 94, 84, 0.08);
+    }
+    .folder-header {
+      width: 100%;
+      padding: 13px 14px;
+      background: #f8fafc;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      text-align: left;
+      transition: background 0.15s ease;
+    }
+    .folder-card.open .folder-header {
+      background: #f0fdf4;
+      border-bottom: 1px solid #dcfce7;
+    }
+    .folder-header-left {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+    }
+    .folder-icon {
+      font-size: 22px;
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      flex-shrink: 0;
+    }
+    .folder-title strong {
+      display: block;
+      font-size: 14.5px;
+      color: #0f172a;
+      font-weight: 800;
+    }
+    .folder-title span {
+      display: block;
+      font-size: 11.5px;
+      color: #64748b;
+      margin-top: 1px;
+    }
+    .folder-arrow {
+      font-size: 13px;
+      color: #64748b;
+      font-weight: 800;
+      transition: transform 0.25s ease;
+    }
+    .folder-card.open .folder-arrow {
+      transform: rotate(180deg);
+      color: var(--primary);
+    }
+    .folder-content {
+      display: none;
+      padding: 10px;
+      background: #ffffff;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .folder-card.open .folder-content {
+      display: flex;
+    }
+
     .menu-big-btn {
       width: 100%;
       background: #f8fafc;
-      border: 2px solid #e2e8f0;
-      border-radius: 14px;
-      padding: 12px 14px;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 10px 12px;
       display: flex;
       align-items: center;
-      gap: 13px;
+      gap: 11px;
       text-align: left;
       cursor: pointer;
       transition: transform 0.12s ease, background 0.15s ease;
@@ -177,46 +250,37 @@
       transform: scale(0.97);
       background: #e2e8f0;
     }
-    .menu-big-btn.proy-highlight {
-      background: #f0fdfa;
-      border-color: #5eead4;
-    }
-    .menu-big-btn.feria-highlight {
-      background: #f5f3ff;
-      border-color: #c4b5fd;
-    }
-    .menu-big-btn.reclamo-highlight {
-      background: #fffbeb;
-      border-color: #fde68a;
-    }
-    .menu-big-btn.urgente-highlight {
-      background: #fef2f2;
-      border-color: #fecaca;
-    }
+    .menu-big-btn.proy-highlight { background: #f0fdfa; border-color: #5eead4; }
+    .menu-big-btn.feria-highlight { background: #f5f3ff; border-color: #c4b5fd; }
+    .menu-big-btn.reclamo-highlight { background: #fffbeb; border-color: #fde68a; }
+    .menu-big-btn.urgente-highlight { background: #fef2f2; border-color: #fecaca; }
+    .menu-big-btn.evento-highlight { background: #eff6ff; border-color: #bfdbfe; }
+    .menu-big-btn.transporte-highlight { background: #fefce8; border-color: #fde047; }
+
     .menu-icon {
-      font-size: 28px;
-      width: 44px;
-      height: 44px;
-      border-radius: 12px;
+      font-size: 23px;
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
       background: #fff;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.06);
       flex-shrink: 0;
     }
     .menu-text strong {
       display: block;
-      font-size: 15px;
+      font-size: 14px;
       color: #0f172a;
       font-weight: 800;
       line-height: 1.2;
     }
     .menu-text span {
       display: block;
-      font-size: 12.5px;
+      font-size: 12px;
       color: #475569;
-      margin-top: 3px;
+      margin-top: 2px;
       font-weight: 500;
     }
 
@@ -564,7 +628,7 @@
       font-size: 14px;
     }
 
-    /* Botones rápidos (Chips grandes y legibles) */
+    /* Botones rápidos inferiores (Chips) */
     .quick-Menu {
       display: flex;
       gap: 8px;
@@ -580,38 +644,20 @@
       background: #fff;
       color: var(--primary);
       border: 1.5px solid rgba(7, 94, 84, 0.35);
-      padding: 8px 14px;
+      padding: 8px 13px;
       border-radius: 22px;
-      font-size: 13px;
+      font-size: 12.5px;
       font-weight: 800;
       cursor: pointer;
       transition: all 0.15s ease;
     }
-    .chip.proy-chip {
-      background: #f0fdfa;
-      border-color: #0d9488;
-      color: #0f766e;
-    }
-    .chip.feria-chip {
-      background: #f5f3ff;
-      border-color: #8b5cf6;
-      color: #5b21b6;
-    }
-    .chip.status-chip {
-      background: #ecfdf5;
-      border-color: #10b981;
-      color: #065f46;
-    }
-    .chip.reclamo-chip {
-      background: #fffbeb;
-      border-color: #f59e0b;
-      color: #b45309;
-    }
-    .chip.urgente-chip {
-      background: #fef2f2;
-      border-color: #ef4444;
-      color: #b91c1c;
-    }
+    .chip.proy-chip { background: #f0fdfa; border-color: #0d9488; color: #0f766e; }
+    .chip.feria-chip { background: #f5f3ff; border-color: #8b5cf6; color: #5b21b6; }
+    .chip.evento-chip { background: #eff6ff; border-color: #3b82f6; color: #1d4ed8; }
+    .chip.transporte-chip { background: #fefce8; border-color: #eab308; color: #854d0e; }
+    .chip.status-chip { background: #ecfdf5; border-color: #10b981; color: #065f46; }
+    .chip.reclamo-chip { background: #fffbeb; border-color: #f59e0b; color: #b45309; }
+    .chip.urgente-chip { background: #fef2f2; border-color: #ef4444; color: #b91c1c; }
     .chip:active { transform: scale(0.95); }
 
     /* Barra inferior estilo WhatsApp */
@@ -808,7 +854,7 @@
       box-shadow: 0 4px 12px rgba(7, 94, 84, 0.25);
     }
 
-    /* ESTILOS DE LA FERIA DIGITAL Y GUÍA DE EMPRENDEDORES (3 PESTAÑAS) */
+    /* PESTAÑAS REUTILIZABLES (FERIA, EVENTOS, REMISES) */
     .feria-tabs {
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
@@ -822,7 +868,7 @@
       padding: 10px 4px;
       border: none;
       border-radius: 9px;
-      font-size: 12.5px;
+      font-size: 12px;
       font-weight: 800;
       cursor: pointer;
       background: transparent;
@@ -859,6 +905,8 @@
       border-color: #7c3aed;
       color: #5b21b6;
     }
+
+    /* Tarjetas de Emprendedores, Eventos y Remises */
     .emp-card {
       background: #ffffff;
       border: 1.5px solid #e2e8f0;
@@ -905,6 +953,14 @@
       padding: 2px 7px;
       border-radius: 6px;
     }
+    .emp-badge-ocupado {
+      background: #fee2e2;
+      color: #991b1b;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 6px;
+    }
     .emp-badge-barrio {
       background: #ede9fe;
       color: #5b21b6;
@@ -913,14 +969,33 @@
       padding: 2px 7px;
       border-radius: 6px;
     }
+    .emp-badge-tarifa {
+      background: #fef3c7;
+      color: #92400e;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 6px;
+    }
     .emp-desc {
-      font-size: 14.5px;
+      font-size: 14px;
       color: #1e293b;
       line-height: 1.45;
       background: #f8fafc;
       padding: 9px 11px;
       border-radius: 9px;
       margin-bottom: 10px;
+    }
+    .remis-meta-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      padding: 8px 10px;
+      border-radius: 9px;
+      font-size: 12.5px;
+      margin-bottom: 9px;
     }
     .emp-actions {
       display: flex;
@@ -959,6 +1034,40 @@
       gap: 6px;
     }
 
+    /* Mapa Embebido (Colectivos y Ferias/Eventos) */
+    .map-embed-box {
+      width: 100%;
+      height: 240px;
+      border-radius: 14px;
+      overflow: hidden;
+      border: 2px solid #cbd5e1;
+      margin-bottom: 12px;
+      background: #e2e8f0;
+    }
+    .map-embed-box iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+    }
+    .parada-item {
+      background: #f8fafc;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 11px 12px;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .parada-item:hover, .parada-item.active-stop {
+      border-color: var(--blue);
+      background: #eff6ff;
+    }
+
     /* Lista de Tickets Guardados */
     .ticket-item {
       display: flex;
@@ -978,118 +1087,233 @@
   <div class="app-container">
     <div class="toast" id="toastMsg">📋 Código copiado</div>
 
-    <!-- MENÚ LATERAL IZQUIERDO DESPLEGABLE (FÁCIL E INTUITIVO) -->
+    <!-- MENÚ LATERAL IZQUIERDO ORGANIZADO POR CARPETAS -->
     <div class="drawer-overlay" id="drawerOverlay" onclick="cerrarMenuLateral()"></div>
     <aside class="side-drawer" id="sideDrawer">
       <div class="drawer-header">
         <div class="drawer-header-left">
           <div class="avatar" style="width:42px;height:42px;border-radius:50%;background:#fff;color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:22px;">🏛️</div>
           <div>
-            <div style="font-size:16px;font-weight:800;">Menú</div>
-            <div style="font-size:12px;color:#d1fae5;">Tocá una opción con el dedo</div>
+            <div style="font-size:16px;font-weight:800;">Menú por Carpetas</div>
+            <div style="font-size:12px;color:#d1fae5;">Tocá una carpeta para abrirla</div>
           </div>
         </div>
         <button type="button" class="drawer-close" onclick="cerrarMenuLateral()">✕</button>
       </div>
 
       <div class="drawer-body">
-        <div class="drawer-section-title">🚀 Apoyo a Emprendedores y Feria</div>
 
-        <button type="button" class="menu-big-btn proy-highlight" onclick="cerrarMenuLateral(); abrirModalProyecto();">
-          <div class="menu-icon">🚀</div>
-          <div class="menu-text">
-            <strong>Pedir Herramientas o Microcrédito</strong>
-            <span>Armá tu proyecto en 4 pasos para fortalecer tu trabajo</span>
+        <!-- CARPETA 1: GESTIÓN CIUDADANA -->
+        <div class="folder-card open" id="folder_ciudadana">
+          <button type="button" class="folder-header" onclick="toggleCarpetaMenu('folder_ciudadana')">
+            <div class="folder-header-left">
+              <div class="folder-icon">🛠️</div>
+              <div class="folder-title">
+                <strong>Gestión Ciudadana</strong>
+                <span>Reclamos barriales, asistencia y seguimiento</span>
+              </div>
+            </div>
+            <span class="folder-arrow">▼</span>
+          </button>
+          <div class="folder-content">
+            <button type="button" class="menu-big-btn reclamo-highlight" onclick="cerrarMenuLateral(); abrirModalReclamo('OBRAS');">
+              <div class="menu-icon">🛠️</div>
+              <div class="menu-text">
+                <strong>Hacer Reclamo Barrial</strong>
+                <span>Foco quemado, calles, basura o agua</span>
+              </div>
+            </button>
+            <button type="button" class="menu-big-btn urgente-highlight" onclick="cerrarMenuLateral(); abrirModalReclamo('SOCIAL');">
+              <div class="menu-icon">🔴</div>
+              <div class="menu-text">
+                <strong>Pedir Asistencia Social</strong>
+                <span>Desarrollo Humano, salud o alimentos</span>
+              </div>
+            </button>
+            <button type="button" class="menu-big-btn" onclick="cerrarMenuLateral(); abrirMisTickets();">
+              <div class="menu-icon">🔍</div>
+              <div class="menu-text">
+                <strong>Estado de mi Reclamo o Proyecto</strong>
+                <span>Ver respuesta oficial con tu PIN</span>
+              </div>
+            </button>
           </div>
-        </button>
+        </div>
 
-        <button type="button" class="menu-big-btn feria-highlight" onclick="cerrarMenuLateral(); abrirModalFeria('EXPLORAR');">
-          <div class="menu-icon">🛒</div>
-          <div class="menu-text">
-            <strong>Feria y Guía de Oficios</strong>
-            <span>Ver quién vende o trabaja en el pueblo</span>
+        <!-- CARPETA 2: EVENTOS Y FERIAS PRESENCIALES -->
+        <div class="folder-card" id="folder_eventos">
+          <button type="button" class="folder-header" onclick="toggleCarpetaMenu('folder_eventos')">
+            <div class="folder-header-left">
+              <div class="folder-icon">🎉</div>
+              <div class="folder-title">
+                <strong>Eventos y Ferias Municipales</strong>
+                <span>Fiestas patronales, ferias sociales y turísticas</span>
+              </div>
+            </div>
+            <span class="folder-arrow">▼</span>
+          </button>
+          <div class="folder-content">
+            <button type="button" class="menu-big-btn evento-highlight" onclick="cerrarMenuLateral(); abrirModalEventos('FIESTAS');">
+              <div class="menu-icon">🎉</div>
+              <div class="menu-text">
+                <strong>Eventos y Fiestas Municipales</strong>
+                <span>Fechas de festivales, actos y peñas</span>
+              </div>
+            </button>
+            <button type="button" class="menu-big-btn evento-highlight" onclick="cerrarMenuLateral(); abrirModalEventos('SOCIALES');">
+              <div class="menu-icon">🤝</div>
+              <div class="menu-text">
+                <strong>Ferias Sociales</strong>
+                <span>Fechas, precios populares y ubicaciones</span>
+              </div>
+            </button>
+            <button type="button" class="menu-big-btn evento-highlight" onclick="cerrarMenuLateral(); abrirModalEventos('CULTURALES');">
+              <div class="menu-icon">🎭</div>
+              <div class="menu-text">
+                <strong>Ferias Culturales y Turísticas</strong>
+                <span>Artesanos, gastronomía y paseos con mapa</span>
+              </div>
+            </button>
           </div>
-        </button>
+        </div>
 
-        <button type="button" class="menu-big-btn feria-highlight" onclick="cerrarMenuLateral(); abrirModalFeria('ANOTARME');">
-          <div class="menu-icon">➕</div>
-          <div class="menu-text">
-            <strong>Anotar mi Emprendimiento</strong>
-            <span>Publicá gratis lo que vendés o tu oficio</span>
+        <!-- CARPETA 3: FERIA DIGITAL Y PRODUCCIÓN -->
+        <div class="folder-card" id="folder_feria">
+          <button type="button" class="folder-header" onclick="toggleCarpetaMenu('folder_feria')">
+            <div class="folder-header-left">
+              <div class="folder-icon">🛒</div>
+              <div class="folder-title">
+                <strong>Feria Digital y Producción</strong>
+                <span>Guía de oficios, ventas y microcréditos</span>
+              </div>
+            </div>
+            <span class="folder-arrow">▼</span>
+          </button>
+          <div class="folder-content">
+            <button type="button" class="menu-big-btn proy-highlight" onclick="cerrarMenuLateral(); abrirModalProyecto();">
+              <div class="menu-icon">🚀</div>
+              <div class="menu-text">
+                <strong>Pedir Herramientas o Microcrédito</strong>
+                <span>Armá tu carpeta técnica con IA en 4 pasos</span>
+              </div>
+            </button>
+            <button type="button" class="menu-big-btn feria-highlight" onclick="cerrarMenuLateral(); abrirModalFeria('EXPLORAR');">
+              <div class="menu-icon">🛒</div>
+              <div class="menu-text">
+                <strong>Explorar Feria y Guía de Oficios</strong>
+                <span>Ver quién vende o trabaja en el departamento</span>
+              </div>
+            </button>
+            <button type="button" class="menu-big-btn feria-highlight" onclick="cerrarMenuLateral(); abrirModalFeria('ANOTARME');">
+              <div class="menu-icon">➕</div>
+              <div class="menu-text">
+                <strong>Anotar mi Emprendimiento</strong>
+                <span>Publicá gratis lo que vendés o tu oficio</span>
+              </div>
+            </button>
+            <button type="button" class="menu-big-btn feria-highlight" onclick="cerrarMenuLateral(); abrirModalFeria('EDITAR');">
+              <div class="menu-icon">✏️</div>
+              <div class="menu-text">
+                <strong>Editar mi Emprendimiento</strong>
+                <span>Modificá tus datos con tu PIN</span>
+              </div>
+            </button>
           </div>
-        </button>
+        </div>
 
-        <button type="button" class="menu-big-btn feria-highlight" onclick="cerrarMenuLateral(); abrirModalFeria('EDITAR');">
-          <div class="menu-icon">✏️</div>
-          <div class="menu-text">
-            <strong>Editar mi Emprendimiento</strong>
-            <span>Modificá tus datos de forma segura con tu PIN</span>
+        <!-- CARPETA 4: TRANSPORTE Y MOVILIDAD -->
+        <div class="folder-card" id="folder_transporte">
+          <button type="button" class="folder-header" onclick="toggleCarpetaMenu('folder_transporte')">
+            <div class="folder-header-left">
+              <div class="folder-icon">🚕</div>
+              <div class="folder-title">
+                <strong>Transporte y Movilidad</strong>
+                <span>Remises disponibles y paradas de colectivo</span>
+              </div>
+            </div>
+            <span class="folder-arrow">▼</span>
+          </button>
+          <div class="folder-content">
+            <button type="button" class="menu-big-btn transporte-highlight" onclick="cerrarMenuLateral(); abrirModalRemises('BUSCAR');">
+              <div class="menu-icon">🚕</div>
+              <div class="menu-text">
+                <strong>Pedir Remis (Disponibles Ahora)</strong>
+                <span>Ver perfil, auto, tarifas y pedir por WhatsApp</span>
+              </div>
+            </button>
+            <button type="button" class="menu-big-btn transporte-highlight" onclick="cerrarMenuLateral(); abrirModalRemises('ALTA');">
+              <div class="menu-icon">🪪</div>
+              <div class="menu-text">
+                <strong>Soy Remisero: Darme de Alta</strong>
+                <span>Registrate para recibir viajes de vecinos</span>
+              </div>
+            </button>
+            <button type="button" class="menu-big-btn transporte-highlight" onclick="cerrarMenuLateral(); abrirModalRemises('ESTADO');">
+              <div class="menu-icon">🟢</div>
+              <div class="menu-text">
+                <strong>Panel Chofer: Disponible / Ocupado</strong>
+                <span>Cambiá tu estado o tarifa con tu PIN</span>
+              </div>
+            </button>
+            <button type="button" class="menu-big-btn evento-highlight" onclick="cerrarMenuLateral(); abrirModalColectivos();">
+              <div class="menu-icon">🚌</div>
+              <div class="menu-text">
+                <strong>Colectivo Urbano y Paradas (Mapa)</strong>
+                <span>Paradas en Gral. Güemes, Campo Santo, El Bordo y Betania</span>
+              </div>
+            </button>
           </div>
-        </button>
+        </div>
 
-        <div class="drawer-section-title">🛠️ Reclamos y Asistencia</div>
-
-        <button type="button" class="menu-big-btn reclamo-highlight" onclick="cerrarMenuLateral(); abrirModalReclamo('OBRAS');">
-          <div class="menu-icon">🛠️</div>
-          <div class="menu-text">
-            <strong>Hacer Reclamo Barrial</strong>
-            <span>Foco quemado, calles, basura o agua</span>
+        <!-- CARPETA 5: INFORMACIÓN, TRÁMITES Y AJUSTES -->
+        <div class="folder-card" id="folder_info">
+          <button type="button" class="folder-header" onclick="toggleCarpetaMenu('folder_info')">
+            <div class="folder-header-left">
+              <div class="folder-icon">📌</div>
+              <div class="folder-title">
+                <strong>Información, Trámites y Ajustes</strong>
+                <span>Becas, proyectos, guardia y configuración</span>
+              </div>
+            </div>
+            <span class="folder-arrow">▼</span>
+          </button>
+          <div class="folder-content">
+            <button type="button" class="menu-big-btn" onclick="cerrarMenuLateral(); enviarRapido('¿Qué proyectos y gestiones se presentaron?');">
+              <div class="menu-icon">🏛️</div>
+              <div class="menu-text">
+                <strong>Proyectos y Ordenanzas</strong>
+                <span>Conocé las obras y gestiones</span>
+              </div>
+            </button>
+            <button type="button" class="menu-big-btn" onclick="cerrarMenuLateral(); enviarRapido('Necesito información sobre subsidios y becas');">
+              <div class="menu-icon">🤝</div>
+              <div class="menu-text">
+                <strong>Subsidios y Becas</strong>
+                <span>Requisitos e inscripciones abiertas</span>
+              </div>
+            </button>
+            <button type="button" class="menu-big-btn" onclick="cerrarMenuLateral(); limpiarChat();">
+              <div class="menu-icon">🗑️</div>
+              <div class="menu-text">
+                <strong>Borrar Todo y Reiniciar</strong>
+                <span>Limpia la charla y tus datos escritos</span>
+              </div>
+            </button>
           </div>
-        </button>
+        </div>
 
-        <button type="button" class="menu-big-btn urgente-highlight" onclick="cerrarMenuLateral(); abrirModalReclamo('SOCIAL');">
-          <div class="menu-icon">🔴</div>
-          <div class="menu-text">
-            <strong>Pedir Asistencia Social</strong>
-            <span>Desarrollo Humano, salud o alimentos</span>
-          </div>
-        </button>
-
-        <button type="button" class="menu-big-btn" onclick="cerrarMenuLateral(); abrirMisTickets();">
-          <div class="menu-icon">🔍</div>
-          <div class="menu-text">
-            <strong>Estado de mi Reclamo o Proyecto</strong>
-            <span>Ver qué respondió la Municipalidad</span>
-          </div>
-        </button>
-
-        <div class="drawer-section-title">📋 Consultas e Información</div>
-
-        <button type="button" class="menu-big-btn" onclick="cerrarMenuLateral(); enviarRapido('¿Qué proyectos presentó el Diputado?');">
-          <div class="menu-icon">🏛️</div>
-          <div class="menu-text">
-            <strong>Proyectos</strong>
-            <span>Conocé las leyes y gestiones</span>
-          </div>
-        </button>
-
-        <button type="button" class="menu-big-btn" onclick="cerrarMenuLateral(); enviarRapido('Necesito información sobre subsidios y becas');">
-          <div class="menu-icon">🤝</div>
-          <div class="menu-text">
-            <strong>Subsidios y Becas</strong>
-            <span>Requisitos e inscripciones abiertas</span>
-          </div>
-        </button>
-
-        <button type="button" class="menu-big-btn" onclick="cerrarMenuLateral(); limpiarChat();">
-          <div class="menu-icon">🗑️</div>
-          <div class="menu-text">
-            <strong>Borrar Todo y Reiniciar</strong>
-            <span>Limpia la charla y tus datos escritos</span>
-          </div>
-        </button>
       </div>
     </aside>
 
     <!-- Header con botón de Menú Izquierdo -->
     <div class="header">
       <div class="header-info">
-        <button type="button" class="btn-menu-ham" onclick="abrirMenuLateral()" title="Abrir menú de opciones">
-          ☰
+        <button type="button" class="btn-menu-ham" onclick="abrirMenuLateral()" title="Abrir carpetas del menú">
+          ☰ Menú
         </button>
         <div class="title">
           <h1>Asistente Ciudadano</h1>
-          <p><span class="online-dot"></span> Intendencia</p>
+          <p><span class="online-dot"></span> Gestión Municipal Activa</p>
         </div>
       </div>
       <div class="header-actions">
@@ -1107,20 +1331,22 @@
       <div class="user-bar" id="userBarGrid">
         <input type="text" id="vecinoNombre" placeholder="👤 Tu Nombre y Apellido" oninput="guardarDatosVecino()" />
         <select id="vecinoBarrio" onchange="guardarDatosVecino()">
-          <option value="">📍 Elegí tu Barrio...</option>
-          <option value="Centro">📍 Barrio Centro</option>
+          <option value="">📍 Elegí tu Barrio / Localidad...</option>
+          <option value="Centro">📍 Barrio Centro (Gral. Güemes)</option>
           <option value="Centro 2">📍 Barrio Centro 2</option>
           <option value="San Cayetano">📍 Barrio San Cayetano</option>
           <option value="El Cruce">📍 Barrio El Cruce</option>
           <option value="Santa Teresita">📍 Barrio Santa Teresita</option>
           <option value="Luján">📍 Barrio Luján</option>
-          <option value="25 de mayo">📍 Barrio 25 de Mayo</option>
+          <option value="25 de Mayo">📍 Barrio 25 de Mayo</option>
+          <option value="Campo Santo">📍 Campo Santo</option>
           <option value="El Bordo">📍 El Bordo</option>
           <option value="Betania">📍 Betania</option>
-          <option value="Otro Barrio">📍 Otro Barrio / Campo</option>
+          <option value="Cobos">📍 Cobos</option>
+          <option value="Otro Barrio">📍 Otro Barrio / Zona Rural</option>
         </select>
         <input type="tel" id="vecinoTelefono" placeholder="📱 Tu Celular (ej: 3875..)" oninput="guardarDatosVecino()" />
-        <input type="password" id="vecinoPin" maxlength="4" inputmode="numeric" placeholder="🔒 PIN Secreto (4 núm)" title="PIN de 4 dígitos para proteger tus reclamos y tu emprendimiento" oninput="guardarDatosVecino()" />
+        <input type="password" id="vecinoPin" maxlength="4" inputmode="numeric" placeholder="🔒 PIN Secreto (4 núm)" title="PIN de 4 dígitos para proteger tus trámites" oninput="guardarDatosVecino()" />
       </div>
     </div>
 
@@ -1151,13 +1377,14 @@
 
     <!-- Menú Rápido Inteligente -->
     <div class="quick-Menu">
-      <button type="button" class="chip proy-chip" onclick="abrirModalProyecto()">🚀 Pedir Herramientas / Microcrédito</button>
-      <button type="button" class="chip feria-chip" onclick="abrirModalFeria('EXPLORAR')">🛒 Feria y Guía de Oficios</button>
-      <button type="button" class="chip reclamo-chip" onclick="abrirModalReclamo('OBRAS')">🛠️ Hacer Reclamo Barrial</button>
+      <button type="button" class="chip reclamo-chip" onclick="abrirModalReclamo('OBRAS')">🛠️ Reclamo Barrial</button>
+      <button type="button" class="chip evento-chip" onclick="abrirModalEventos('FIESTAS')">🎉 Eventos y Ferias</button>
+      <button type="button" class="chip transporte-chip" onclick="abrirModalRemises('BUSCAR')">🚕 Pedir Remis</button>
+      <button type="button" class="chip evento-chip" onclick="abrirModalColectivos()">🚌 Colectivos y Paradas</button>
+      <button type="button" class="chip feria-chip" onclick="abrirModalFeria('EXPLORAR')">🛒 Feria Digital</button>
+      <button type="button" class="chip proy-chip" onclick="abrirModalProyecto()">🚀 Microcréditos</button>
       <button type="button" class="chip urgente-chip" onclick="abrirModalReclamo('SOCIAL')">🔴 Asistencia Social</button>
-      <button type="button" class="chip status-chip" onclick="abrirBuscadorEstado()">🔍 Estado de mi Reclamo</button>
-      <button type="button" class="chip" onclick="enviarRapido('¿Qué proyectos presentó?')">📋 Proyectos</button>
-      <button type="button" class="chip" onclick="enviarRapido('Necesito información sobre subsidios y becas')">🤝 Subsidios y Becas</button>
+      <button type="button" class="chip status-chip" onclick="abrirBuscadorEstado()">🔍 Estado Trámite</button>
     </div>
 
     <!-- Barra Inferior de Entrada -->
@@ -1179,7 +1406,9 @@
       <button type="button" class="send-btn" onclick="enviarMensaje()" title="Enviar mensaje">➤</button>
     </div>
 
+    <!-- ======================================================================= -->
     <!-- MODAL 1: ASISTENTE GUIADO DE RECLAMO / ASISTENCIA -->
+    <!-- ======================================================================= -->
     <div class="sheet-overlay" id="modalReclamo">
       <div class="sheet-card">
         <div class="sheet-header">
@@ -1225,7 +1454,9 @@
       </div>
     </div>
 
+    <!-- ======================================================================= -->
     <!-- MODAL 2: MIS TICKETS GUARDADOS Y CONSULTA DE ESTADO CON PIN -->
+    <!-- ======================================================================= -->
     <div class="sheet-overlay" id="modalTickets">
       <div class="sheet-card">
         <div class="sheet-header">
@@ -1233,7 +1464,7 @@
           <button type="button" class="sheet-close" onclick="cerrarMisTickets()">✕</button>
         </div>
         <p style="font-size:13.5px;color:#334155;margin-bottom:10px;">
-          Para cuidar tu privacidad, poné tu <strong>🔒 PIN de 4 números</strong> y tocá tu código para ver si ya fue aprobado o respondido:
+          Para cuidar tu privacidad, poné tu <strong>🔒 PIN de 4 números</strong> y tocá tu código para ver el dictamen oficial:
         </p>
         <div id="listaMisTickets" style="margin-bottom:14px;"></div>
 
@@ -1249,11 +1480,13 @@
       </div>
     </div>
 
-    <!-- MODAL 3: FERIA DIGITAL Y GUÍA DE EMPRENDEDORES (BUSCAR + ANOTARME + EDITAR EL MÍO CON PIN) -->
+    <!-- ======================================================================= -->
+    <!-- MODAL 3: FERIA DIGITAL Y GUÍA DE EMPRENDEDORES -->
+    <!-- ======================================================================= -->
     <div class="sheet-overlay" id="modalFeria">
       <div class="sheet-card">
         <div class="sheet-header">
-          <h3>🛒 Feria y Oficios del Pueblo</h3>
+          <h3>🛒 Feria Digital y Guía de Oficios</h3>
           <button type="button" class="sheet-close" onclick="cerrarModalFeria()">✕</button>
         </div>
 
@@ -1272,7 +1505,7 @@
         <!-- PESTAÑA A: VER GUÍA DE EMPRENDEDORES Y OFICIOS -->
         <div id="vistaFeriaExplorar">
           <p style="font-size:13px;color:#475569;margin-bottom:8px;">
-            Tocá un dibujo para ver qué vecinos venden o trabajan en esa área y hablales directo por WhatsApp:
+            Elegí un rubro para ver qué vecinos venden o trabajan en esa área y hablales directo por WhatsApp:
           </p>
 
           <div class="rubros-grid">
@@ -1284,7 +1517,7 @@
             <button type="button" class="rubro-pill" onclick="filtrarRubroFeria('🚜 Fletes, Poda y Trabajos Rurales', this)">🚜 Fletes y Poda</button>
             <button type="button" class="rubro-pill" onclick="filtrarRubroFeria('💍 Bijoutería', this)">💍 Bijoutería</button>
             <button type="button" class="rubro-pill" onclick="filtrarRubroFeria('💇‍♀️ Peluquería', this)">💇‍♀️ Peluquería</button>
-            <button type="button" class="rubro-pill" onclick="filtrarRubroFeria('💅 Belleza cosmética', this)">💅 Belleza cosmética o uñas y pestañas</button>
+            <button type="button" class="rubro-pill" onclick="filtrarRubroFeria('💅 Belleza cosmética o uñas y pestañas', this)">💅 Belleza y Uñas</button>
           </div>
 
           <input type="text" id="buscadorFeriaTxt" placeholder="🔍 Escribí qué buscás (ej: pan, huevos, plomero)..." oninput="renderListaEmprendedores()" style="width:100%;padding:10px 12px;border:1.5px solid #cbd5e1;border-radius:10px;font-size:14px;margin-bottom:12px;" />
@@ -1295,7 +1528,7 @@
         <!-- PESTAÑA B: ANOTAR MI EMPRENDIMIENTO U OFICIO GRATIS -->
         <div id="vistaFeriaAnotarme" style="display:none;">
           <div style="background:#f5f3ff;border:1px solid #c4b5fd;padding:10px 12px;border-radius:10px;font-size:13px;color:#4c1d95;margin-bottom:12px;">
-            🌱 <strong>¡Sumate gratis a la Guía del Pueblo!</strong> Completá qué vendés o qué oficio hacés. El Secretario de Desarrollo Humano lo verificará para que todos los vecinos puedan comprarte o contratarte por WhatsApp.
+            🌱 <strong>¡Sumate gratis a la Guía del Pueblo!</strong> Completá qué vendés o qué oficio hacés. El Secretario lo verificará para que los vecinos te contacten por WhatsApp.
           </div>
 
           <div class="form-group">
@@ -1304,7 +1537,7 @@
           </div>
 
           <div class="form-group">
-            <label>2. ¿De qué Barrio o Zona Rural sos?</label>
+            <label>2. ¿De qué Barrio o Localidad sos?</label>
             <select id="empBarrio">
               <option value="">📍 Elegí tu Barrio...</option>
               <option value="Centro">📍 Barrio Centro</option>
@@ -1313,7 +1546,8 @@
               <option value="El Cruce">📍 Barrio El Cruce</option>
               <option value="Santa Teresita">📍 Barrio Santa Teresita</option>
               <option value="Luján">📍 Barrio Luján</option>
-              <option value="25 de mayo">📍 Barrio 25 de Mayo</option>
+              <option value="25 de Mayo">📍 Barrio 25 de Mayo</option>
+              <option value="Campo Santo">📍 Campo Santo</option>
               <option value="El Bordo">📍 El Bordo</option>
               <option value="Betania">📍 Betania</option>
               <option value="Otro Barrio">📍 Otro Barrio / Campo</option>
@@ -1344,7 +1578,7 @@
             <button type="button" class="btn-voice-helper" onclick="dictarEnCampo('empDescripcion')">
               🎙️ Tocá acá y contá con tu voz qué vendés o hacés
             </button>
-            <textarea id="empDescripcion" placeholder="Ej: Hago pan casero, tortillas y empanadas todos los días. También hago envíos en el barrio..."></textarea>
+            <textarea id="empDescripcion" placeholder="Ej: Hago pan casero, tortillas y empanadas todos los días. También hago envíos..."></textarea>
           </div>
 
           <div class="form-group">
@@ -1365,11 +1599,11 @@
           </button>
         </div>
 
-        <!-- PESTAÑA C: EDITAR MI EMPRENDIMIENTO (PROTEGIDO CON PIN DEL CREADOR) -->
+        <!-- PESTAÑA C: EDITAR MI EMPRENDIMIENTO CON PIN -->
         <div id="vistaFeriaEditar" style="display:none;">
           <div id="bloqueLoginEditarEmp">
             <div style="background:#fef3c7;border:1px solid #fde68a;padding:11px 12px;border-radius:10px;font-size:13px;color:#92400e;margin-bottom:12px;">
-              🔒 <strong>Acceso Privado para el Emprendedor:</strong> Ingresá el número de WhatsApp con el que anotaste tu emprendimiento (o tu código <code>EMP-...</code>) y tu <strong>PIN secreto de 4 números</strong>. Solo vos podés ver y cambiar tus datos.
+              🔒 <strong>Acceso Privado para el Emprendedor:</strong> Ingresá tu WhatsApp (o código <code>EMP-...</code>) y tu <strong>PIN secreto de 4 números</strong>.
             </div>
 
             <div class="form-group">
@@ -1382,7 +1616,7 @@
               <input type="password" id="editEmpPinAcceso" maxlength="4" inputmode="numeric" placeholder="🔒 Tus 4 números de PIN" />
             </div>
 
-            <button type="button" class="btn-submit-reclamo" id="btnBuscarMiEmp" onclick="buscarMiEmprendimientoConPin()" style="background:linear-gradient(135deg, #075e54 0%, #0a786c 100%);">
+            <button type="button" class="btn-submit-reclamo" id="btnBuscarMiEmp" onclick="buscarMiEmprendimientoConPin()">
               🔓 Verificar mi PIN y Cargar mis Datos
             </button>
           </div>
@@ -1401,30 +1635,30 @@
             <input type="hidden" id="editEmpIdActual" />
 
             <div class="form-group">
-              <label>1. Tu Nombre o Nombre de tu Emprendimiento</label>
-              <input type="text" id="editEmpNombre" placeholder="Nombre de tu emprendimiento" />
+              <label>1. Nombre de tu Emprendimiento</label>
+              <input type="text" id="editEmpNombre" />
             </div>
 
             <div class="form-group">
-              <label>2. Barrio o Zona Rural</label>
+              <label>2. Barrio o Localidad</label>
               <select id="editEmpBarrio">
-                          <option value="">📍 Elegí tu Barrio...</option>
-                          <option value="Centro">📍 Barrio Centro</option>
-                          <option value="Centro 2">📍 Barrio Centro 2</option>
-                          <option value="San Cayetano">📍 Barrio San Cayetano</option>
-                          <option value="El Cruce">📍 Barrio El Cruce</option>
-                          <option value="Santa Teresita">📍 Barrio Santa Teresita</option>
-                          <option value="Luján">📍 Barrio Luján</option>
-                          <option value="25 de mayo">📍 Barrio 25 de Mayo</option>
-                          <option value="El Bordo">📍 El Bordo</option>
-                          <option value="Betania">📍 Betania</option>
-                          <option value="Otro Barrio">📍 Otro Barrio / Campo</option>
+                <option value="Centro">📍 Barrio Centro</option>
+                <option value="Centro 2">📍 Barrio Centro 2</option>
+                <option value="San Cayetano">📍 Barrio San Cayetano</option>
+                <option value="El Cruce">📍 Barrio El Cruce</option>
+                <option value="Santa Teresita">📍 Barrio Santa Teresita</option>
+                <option value="Luján">📍 Barrio Luján</option>
+                <option value="25 de Mayo">📍 Barrio 25 de Mayo</option>
+                <option value="Campo Santo">📍 Campo Santo</option>
+                <option value="El Bordo">📍 El Bordo</option>
+                <option value="Betania">📍 Betania</option>
+                <option value="Otro Barrio">📍 Otro Barrio / Campo</option>
               </select>
             </div>
 
             <div class="form-group">
               <label>3. Tu Número de WhatsApp</label>
-              <input type="tel" id="editEmpTelefono" placeholder="Ej: 3875622260" />
+              <input type="tel" id="editEmpTelefono" />
             </div>
 
             <div class="form-group">
@@ -1444,13 +1678,13 @@
             <div class="form-group">
               <label>5. Descripción de lo que vendés o hacés</label>
               <button type="button" class="btn-voice-helper" onclick="dictarEnCampo('editEmpDescripcion')">
-                🎙️ Tocá acá para agregar o corregir hablando con tu voz
+                🎙️ Tocá acá para agregar o corregir hablando
               </button>
-              <textarea id="editEmpDescripcion" placeholder="Describí tus productos, servicios o precios..."></textarea>
+              <textarea id="editEmpDescripcion"></textarea>
             </div>
 
             <div class="form-group">
-              <label>6. Cambiar Foto de tu Producto o Trabajo (Opcional)</label>
+              <label>6. Cambiar Foto (Opcional)</label>
               <input type="file" id="editEmpFotoInput" accept="image/*" style="display:none" onchange="procesarFotoEditarEmprendedor(event)" />
               <button type="button" class="btn-sheet-tool" id="btnSubirFotoEditEmp" onclick="document.getElementById('editEmpFotoInput').click()" style="width:100%;">
                 📸 Cambiar Foto (Dejar igual si no subís otra)
@@ -1465,7 +1699,9 @@
       </div>
     </div>
 
-    <!-- MODAL 4: ARMADOR DE PROYECTOS PRODUCTIVOS CON IA (MICROCRÉDITOS / BANCO DE HERRAMIENTAS) -->
+    <!-- ======================================================================= -->
+    <!-- MODAL 4: ARMADOR DE PROYECTOS PRODUCTIVOS CON IA -->
+    <!-- ======================================================================= -->
     <div class="sheet-overlay" id="modalProyecto">
       <div class="sheet-card">
         <div class="sheet-header">
@@ -1476,9 +1712,9 @@
         <div style="background:#f0fdfa;border:1.5px solid #5eead4;padding:11px 12px;border-radius:12px;font-size:13.5px;color:#115e59;margin-bottom:14px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
             <strong>🌱 Fortalecimiento de Emprendedores</strong>
-            <button type="button" class="btn-tts" onclick="escucharTexto(this, 'Respondé estas 4 preguntas sencillas, escribiendo o hablando con el micrófono. El sistema armará sola tu carpeta técnica en PDF para que Desarrollo Humano evalúe entregarte las herramientas, materiales o microcrédito.')">🔊 Escuchar ayuda</button>
+            <button type="button" class="btn-tts" onclick="escucharTexto(this, 'Respondé estas 4 preguntas sencillas, escribiendo o hablando con el micrófono. El sistema armará sola tu carpeta técnica para que Desarrollo Humano evalúe entregarte las herramientas, materiales o microcrédito.')">🔊 Escuchar ayuda</button>
           </div>
-          Respondé estas <strong>4 preguntas sencillas</strong> (podés hablar con el micrófono 🎙️) y nuestra Inteligencia Artificial armará tu <strong>Carpeta Técnica en PDF</strong> para Desarrollo Humano.
+          Respondé estas <strong>4 preguntas sencillas</strong> y nuestra Inteligencia Artificial armará tu <strong>Carpeta Técnica Oficial</strong> para Desarrollo Humano.
         </div>
 
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
@@ -1493,19 +1729,19 @@
         </div>
 
         <div class="form-group">
-          <label>📍 ¿De qué Barrio o Zona Rural sos?</label>
+          <label>📍 ¿De qué Barrio o Localidad sos?</label>
           <select id="proyBarrio">
-                      <option value="">📍 Elegí tu Barrio...</option>
-                      <option value="Centro">📍 Barrio Centro</option>
-                      <option value="Centro 2">📍 Barrio Centro 2</option>
-                      <option value="San Cayetano">📍 Barrio San Cayetano</option>
-                      <option value="El Cruce">📍 Barrio El Cruce</option>
-                      <option value="Santa Teresita">📍 Barrio Santa Teresita</option>
-                      <option value="Luján">📍 Barrio Luján</option>
-                      <option value="25 de mayo">📍 Barrio 25 de Mayo</option>
-                      <option value="El Bordo">📍 El Bordo</option>
-                      <option value="Betania">📍 Betania</option>
-                      <option value="Otro Barrio">📍 Otro Barrio / Campo</option>
+            <option value="Centro">📍 Barrio Centro</option>
+            <option value="Centro 2">📍 Barrio Centro 2</option>
+            <option value="San Cayetano">📍 Barrio San Cayetano</option>
+            <option value="El Cruce">📍 Barrio El Cruce</option>
+            <option value="Santa Teresita">📍 Barrio Santa Teresita</option>
+            <option value="Luján">📍 Barrio Luján</option>
+            <option value="25 de Mayo">📍 Barrio 25 de Mayo</option>
+            <option value="Campo Santo">📍 Campo Santo</option>
+            <option value="El Bordo">📍 El Bordo</option>
+            <option value="Betania">📍 Betania</option>
+            <option value="Otro Barrio">📍 Otro Barrio / Campo</option>
           </select>
         </div>
 
@@ -1534,15 +1770,15 @@
         </div>
 
         <div class="form-group">
-          <label>3️⃣ ¿Qué herramientas, materiales o microcrédito necesitás y para qué los usarías?</label>
+          <label>3️⃣ ¿Qué herramientas, materiales o microcrédito necesitás?</label>
           <button type="button" class="btn-voice-helper" onclick="dictarEnCampo('proyNecesidad')">
-            🎙️ Tocá acá y contá con tu voz qué herramientas o materiales necesitás
+            🎙️ Tocá acá y contá con tu voz qué herramientas necesitás
           </button>
-          <textarea id="proyNecesidad" placeholder="Ej: Necesito un horno pizzero y una amasadora chica, o bolsas de harina, porque hoy horneo en cocina prestada y quiero vender más pan en mi barrio..."></textarea>
+          <textarea id="proyNecesidad" placeholder="Ej: Necesito un horno pizzero y una amasadora chica..."></textarea>
         </div>
 
         <div class="form-group">
-          <label>4️⃣ ¿Cuántas personas de tu familia trabajan o viven de este emprendimiento?</label>
+          <label>4️⃣ ¿Cuántas personas de tu familia viven de este emprendimiento?</label>
           <select id="proyFamilia">
             <option value="1 a 2 personas del hogar">👨‍👩‍👧 1 a 2 personas de mi familia</option>
             <option value="3 a 4 personas del hogar">👨‍👩‍👧‍👦 3 a 4 personas de mi familia</option>
@@ -1552,7 +1788,7 @@
         </div>
 
         <div class="form-group">
-          <label>📸 Foto de lo que hacés o de tu lugar de trabajo (Opcional)</label>
+          <label>📸 Foto de tu trabajo (Opcional)</label>
           <input type="file" id="proyFotoInput" accept="image/*" style="display:none" onchange="procesarFotoProyecto(event)" />
           <button type="button" class="btn-sheet-tool" id="btnSubirFotoProy" onclick="document.getElementById('proyFotoInput').click()" style="width:100%;">
             📸 Sacar o Subir una Foto de mi trabajo
@@ -1560,15 +1796,270 @@
         </div>
 
         <button type="button" class="btn-submit-reclamo" id="btnEnviarProyecto" onclick="enviarProyectoProductivo()" style="background:linear-gradient(135deg, #0d9488 0%, #0f766e 100%);">
-          🚀 Armar mi Carpeta Técnica en PDF y Enviar
+          🚀 Armar mi Carpeta Técnica y Enviar
         </button>
       </div>
     </div>
+
+    <!-- ======================================================================= -->
+    <!-- MODAL 5 (NUEVO): AGENDA DE EVENTOS, FERIAS SOCIALES Y CULTURALES -->
+    <!-- ======================================================================= -->
+    <div class="sheet-overlay" id="modalEventos">
+      <div class="sheet-card">
+        <div class="sheet-header">
+          <h3 style="color:#1d4ed8;">🎉 Eventos y Ferias Presenciales</h3>
+          <button type="button" class="sheet-close" onclick="cerrarModalEventos()">✕</button>
+        </div>
+
+        <div class="feria-tabs">
+          <button type="button" class="feria-tab-btn active" id="tabEvFiestas" onclick="cambiarTabEventos('FIESTAS')">
+            🎉 Fiestas y Eventos
+          </button>
+          <button type="button" class="feria-tab-btn" id="tabEvSociales" onclick="cambiarTabEventos('SOCIALES')">
+            🤝 Ferias Sociales
+          </button>
+          <button type="button" class="feria-tab-btn" id="tabEvCulturales" onclick="cambiarTabEventos('CULTURALES')">
+            🎭 Cultural y Turística
+          </button>
+        </div>
+
+        <!-- Mapa dinámico que se abre al tocar cualquier feria o evento -->
+        <div id="mapaEventoWrapper" style="display:none; margin-bottom:12px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;background:#eff6ff;padding:7px 11px;border-radius:10px 10px 0 0;border:1.5px solid #93c5fd;border-bottom:none;font-size:12.5px;font-weight:800;color:#1e3a8a;">
+            <span id="tituloMapaEvento">📍 Ubicación del Evento / Feria</span>
+            <button type="button" onclick="document.getElementById('mapaEventoWrapper').style.display='none'" style="border:none;background:none;color:#1e3a8a;font-weight:800;cursor:pointer;">✖ Cerrar Mapa</button>
+          </div>
+          <div class="map-embed-box" style="border-radius:0 0 12px 12px;margin-bottom:0;height:210px;">
+            <iframe id="iframeMapaEvento" src="about:blank" loading="lazy"></iframe>
+          </div>
+        </div>
+
+        <div id="contenedorEventosLista"></div>
+      </div>
+    </div>
+
+    <!-- ======================================================================= -->
+    <!-- MODAL 6 (NUEVO): CENTRAL DE REMISES (BUSCAR + ALTA CHOFER + MI ESTADO) -->
+    <!-- ======================================================================= -->
+    <div class="sheet-overlay" id="modalRemises">
+      <div class="sheet-card">
+        <div class="sheet-header">
+          <h3 style="color:#b45309;">🚕 Central de Remises del Departamento</h3>
+          <button type="button" class="sheet-close" onclick="cerrarModalRemises()">✕</button>
+        </div>
+
+        <div class="feria-tabs">
+          <button type="button" class="feria-tab-btn active" id="tabRemisBuscar" onclick="cambiarTabRemises('BUSCAR')">
+            🚕 Ver Disponibles
+          </button>
+          <button type="button" class="feria-tab-btn" id="tabRemisAlta" onclick="cambiarTabRemises('ALTA')">
+            ➕ Darme de Alta
+          </button>
+          <button type="button" class="feria-tab-btn" id="tabRemisEstado" onclick="cambiarTabRemises('ESTADO')">
+            🟢 Soy Chofer (PIN)
+          </button>
+        </div>
+
+        <!-- PESTAÑA A: BUSCAR REMIS DISPONIBLE -->
+        <div id="vistaRemisBuscar">
+          <div style="background:#fefce8;border:1px solid #fde047;padding:9px 12px;border-radius:10px;font-size:12.5px;color:#854d0e;margin-bottom:10px;">
+            🚕 <strong>Remises Verificados por la Municipalidad:</strong> Mirá el perfil del chofer, vehículo, localidad de base, zonas a las que llega y tarifa orientativa. Tocá <strong>Pedir por WhatsApp</strong> para coordinar tu viaje directo.
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
+            <select id="filtroRemisLocalidad" onchange="renderListaRemises()" style="padding:9px;border-radius:9px;border:1.5px solid #cbd5e1;font-size:13px;font-weight:700;">
+              <option value="TODAS">📍 Todo el Dpto. Güemes</option>
+              <option value="General Güemes">📍 General Güemes</option>
+              <option value="Campo Santo">📍 Campo Santo</option>
+              <option value="El Bordo">📍 El Bordo</option>
+              <option value="Betania">📍 Betania</option>
+            </select>
+            <select id="filtroRemisDisponibilidad" onchange="renderListaRemises()" style="padding:9px;border-radius:9px;border:1.5px solid #cbd5e1;font-size:13px;font-weight:700;">
+              <option value="DISPONIBLES">🟢 Solo Disponibles Ahora</option>
+              <option value="TODOS">📋 Ver Todos el Padrón</option>
+            </select>
+          </div>
+
+          <div id="contenedorRemises"></div>
+        </div>
+
+        <!-- PESTAÑA B: DARSE DE ALTA COMO REMISERO (CON APROBACIÓN DEL SECRETARIO) -->
+        <div id="vistaRemisAlta" style="display:none;">
+          <div style="background:#eff6ff;border:1px solid #93c5fd;padding:10px 12px;border-radius:10px;font-size:13px;color:#1e3a8a;margin-bottom:12px;">
+            🪪 <strong>Registro Oficial de Remiseros:</strong> Completá tus datos y los de tu vehículo. Una vez aprobado por el Secretario Municipal, aparecerás en la lista para recibir viajes directo a tu WhatsApp.
+          </div>
+
+          <div style="display:grid;grid-template-columns:2fr 1fr;gap:8px;">
+            <div class="form-group">
+              <label>1. Nombre y Apellido del Chofer</label>
+              <input type="text" id="remNombre" placeholder="Ej: Carlos Gómez" />
+            </div>
+            <div class="form-group">
+              <label>2. Edad</label>
+              <input type="number" id="remEdad" placeholder="Ej: 38" />
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <div class="form-group">
+              <label>3. N° de Documento (DNI)</label>
+              <input type="text" id="remDni" placeholder="Sin puntos" />
+            </div>
+            <div class="form-group">
+              <label>4. Tu WhatsApp para Viajes</label>
+              <input type="tel" id="remTelefono" placeholder="Ej: 3875..." />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>5. Auto (Marca, Modelo, Color y Patente)</label>
+            <input type="text" id="remAuto" placeholder="Ej: Fiat Cronos Blanco - Patente AE123CD" />
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <div class="form-group">
+              <label>6. ¿De dónde sos? (Localidad/Barrio base)</label>
+              <select id="remOrigen">
+                <option value="General Güemes">📍 General Güemes</option>
+                <option value="Campo Santo">📍 Campo Santo</option>
+                <option value="El Bordo">📍 El Bordo</option>
+                <option value="Betania">📍 Betania</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>7. ¿A qué partes llegás?</label>
+              <input type="text" id="remDestinos" placeholder="Ej: Todo el Dpto. Güemes y Salta Capital" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>8. Referencia de Precios / Tarifa (Orientativa)</label>
+            <input type="text" id="remTarifa" placeholder="Ej: Base urbana $2.000 / Interurbano $1.500 x persona / A convenir" />
+          </div>
+
+          <div class="form-group">
+            <label>9. Elegí un PIN Secreto de 4 números (Para ponerte Disponible/Ocupado)</label>
+            <input type="password" id="remPinCrear" maxlength="4" inputmode="numeric" placeholder="🔒 Ej: 4321" />
+          </div>
+
+          <div class="form-group">
+            <label>10. Foto tuya o de tu Auto (Opcional)</label>
+            <input type="file" id="remFotoInput" accept="image/*" style="display:none" onchange="procesarFotoRemis(event)" />
+            <button type="button" class="btn-sheet-tool" id="btnSubirFotoRem" onclick="document.getElementById('remFotoInput').click()" style="width:100%;">
+              📸 Subir Foto del Auto o Perfil
+            </button>
+          </div>
+
+          <button type="button" class="btn-submit-reclamo" id="btnEnviarRemis" onclick="enviarAltaRemisero()" style="background:linear-gradient(135deg, #d97706 0%, #b45309 100%);">
+            ✅ Solicitar Alta como Remisero
+          </button>
+        </div>
+
+        <!-- PESTAÑA C: PANEL RÁPIDO DEL CHOFER CON PIN (DISPONIBLE / OCUPADO / TARIFA) -->
+        <div id="vistaRemisEstado" style="display:none;">
+          <div id="bloqueLoginChofer">
+            <div style="background:#fef3c7;border:1px solid #fde68a;padding:11px 12px;border-radius:10px;font-size:13px;color:#92400e;margin-bottom:12px;">
+              🔑 <strong>Panel Exclusivo para Remiseros:</strong> Ingresá tu WhatsApp (o código <code>REM-...</code>) y tu <strong>PIN de 4 números</strong> para activarte como <strong>🟢 Disponible</strong> cuando salís a trabajar o <strong>🔴 Fuera de servicio</strong> cuando descansás.
+            </div>
+            <div class="form-group">
+              <label>1. Tu WhatsApp o Código REM-...</label>
+              <input type="text" id="loginRemisDato" placeholder="Ej: 3875622260 o REM-1234" />
+            </div>
+            <div class="form-group">
+              <label>2. Tu PIN Secreto (4 números)</label>
+              <input type="password" id="loginRemisPin" maxlength="4" inputmode="numeric" placeholder="🔒 Tus 4 números" />
+            </div>
+            <button type="button" class="btn-submit-reclamo" id="btnVerificarChofer" onclick="verificarPinChoferRemis()">
+              🔓 Ingresar a mi Panel de Chofer
+            </button>
+          </div>
+
+          <div id="bloquePanelChoferActivo" style="display:none;">
+            <div style="background:#dcfce7;border:1px solid #86efac;padding:10px 12px;border-radius:10px;font-size:13px;color:#166534;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;">
+              <span id="saludoChoferActivo">🔓 Chofer Verificado</span>
+              <button type="button" onclick="cerrarSesionChofer()" style="border:none;background:#fff;color:#166534;padding:4px 8px;border-radius:6px;font-size:11.5px;font-weight:800;cursor:pointer;">Salir</button>
+            </div>
+
+            <input type="hidden" id="editRemId" />
+
+            <div class="form-group">
+              <label>🚦 ¿Estás disponible para viajes en este momento?</label>
+              <select id="editRemDisponibilidad" style="font-weight:800;font-size:15px;">
+                <option value="🟢 Disponible">🟢 DISPONIBLE AHORA (Recibiendo viajes)</option>
+                <option value="🟡 En viaje">🟡 EN VIAJE (Con pasajeros en este momento)</option>
+                <option value="🔴 Fuera de servicio">🔴 FUERA DE SERVICIO / DESCANSO</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>🚗 Vehículo (Marca, Modelo, Patente)</label>
+              <input type="text" id="editRemAuto" />
+            </div>
+
+            <div class="form-group">
+              <label>🗺️ ¿A qué partes llegás hoy?</label>
+              <input type="text" id="editRemDestinos" />
+            </div>
+
+            <div class="form-group">
+              <label>💲 Tu Tarifa / Precio de Referencia</label>
+              <input type="text" id="editRemTarifa" />
+            </div>
+
+            <div class="form-group">
+              <label>📱 Tu WhatsApp</label>
+              <input type="tel" id="editRemTelefono" />
+            </div>
+
+            <button type="button" class="btn-submit-reclamo" id="btnGuardarEstadoChofer" onclick="guardarEstadoChoferRemis()" style="background:linear-gradient(135deg, #16a34a 0%, #15803d 100%);">
+              💾 Actualizar mi Disponibilidad y Datos
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================================================================= -->
+    <!-- MODAL 7 (NUEVO): COLECTIVO URBANO Y MAPA DE PARADAS (DPTO. GRAL. GÜEMES) -->
+    <!-- ======================================================================= -->
+    <div class="sheet-overlay" id="modalColectivos">
+      <div class="sheet-card">
+        <div class="sheet-header">
+          <h3 style="color:#0f766e;">🚌 Colectivo Urbano y Paradas — Dpto. Gral. Güemes</h3>
+          <button type="button" class="sheet-close" onclick="cerrarModalColectivos()">✕</button>
+        </div>
+
+        <p style="font-size:13px;color:#475569;margin-bottom:10px;">
+          Elegí tu localidad y tocá cualquier parada para ver su ubicación exacta en el mapa interactivo y los horarios de paso:
+        </p>
+
+        <div class="form-group">
+          <select id="filtroLocalidadColectivo" onchange="renderParadasColectivo()" style="font-weight:800;color:#0f172a;">
+            <option value="TODAS">🗺️ Ver Todas las Paradas del Departamento</option>
+            <option value="General Güemes">📍 General Güemes (Ciudad)</option>
+            <option value="Campo Santo">📍 Campo Santo</option>
+            <option value="El Bordo">📍 El Bordo</option>
+            <option value="Betania">📍 Betania y Cruce Ruta 11</option>
+          </select>
+        </div>
+
+        <!-- Mapa Google Maps Incrustado -->
+        <div class="map-embed-box">
+          <iframe id="iframeMapaColectivos" src="https://maps.google.com/maps?q=-24.6672,-65.0475&t=m&z=14&output=embed" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+        </div>
+
+        <div style="font-size:12px;font-weight:800;color:#475569;text-transform:uppercase;margin-bottom:8px;">
+          🚏 Paradas Habilitadas (Tocá una para centrar el mapa)
+        </div>
+        <div id="contenedorParadasColectivo"></div>
+      </div>
+    </div>
+
   </div>
 
   <script>
     // URL de tu implementación de Google Apps Script
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzN9JTD4pd9VvzvuooKmjCzYZ6VwPN9RmBBdAmRRaGV4MTPcKBSTTPeB9cS2QbFaJWe/exec';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxT7U0FSkmHYzNdny6Wg2rpCc-uAvqiJU1IZZOlGg83f4VMh5Uy9YsCOyd0WlZtSWma/exec';
 
     const MAX_ARCHIVOS = 3;
     let historialChat = JSON.parse(localStorage.getItem('muni_chat_hist') || '[]');
@@ -1583,6 +2074,78 @@
     let fotoEmprendedorTmp = null;
     let fotoEditarEmprendedorTmp = null;
     let fotoProyectoTmp = null;
+    let fotoRemisTmp = null;
+
+    // Estado de Eventos, Ferias Presenciales, Remises y Colectivos
+    let tabEventoActual = 'FIESTAS';
+    let listaEventosYFerias = [];
+    let listaRemiserosPublicos = [];
+    let listaParadasColectivo = [];
+
+    // Datos base iniciales del Departamento General Güemes (se fusionan con los que cargue el Secretario desde admin.html)
+    const EVENTOS_DEFAULT = [
+      {
+        id: 'EV-01',
+        categoria: 'FIESTAS',
+        titulo: '🎶 Festival y Peña Folclórica Municipal',
+        fecha: 'Próximo Sábado — 21:00 hs',
+        lugar: 'Predio Municipal / Plaza Central',
+        localidad: 'General Güemes',
+        descripcion: 'Encuentro con artistas folclóricos locales, academias de danzas tradicionales y patio gastronómico criollo con entrada libre.',
+        mapaQuery: 'Plaza Central General Guemes Salta Argentina'
+      },
+      {
+        id: 'EV-02',
+        categoria: 'FIESTAS',
+        titulo: '🏛️ Acto y Festejos Patronales Departamentales',
+        fecha: 'Domingo — Desde las 09:30 hs',
+        lugar: 'Avenida Principal y Parroquia Local',
+        localidad: 'Campo Santo',
+        descripcion: 'Procesión, desfile cívico y gaucho de fortines del Valle de Siancas, seguido de feria de platos regionales.',
+        mapaQuery: 'Plaza Principal Campo Santo Salta Argentina'
+      },
+      {
+        id: 'EV-03',
+        categoria: 'SOCIALES',
+        titulo: '🤝 Feria Social de Precios Populares y Huerta',
+        fecha: 'Todos los Viernes — 08:30 a 13:30 hs',
+        lugar: 'Paseo Vecinal / Playón Deportivo',
+        localidad: 'General Güemes',
+        descripcion: 'Venta directa del productor al vecino: verduras frescas de la zona, pan casero, lácteos, bolsones económicos y ropa.',
+        mapaQuery: 'Terminal de Omnibus General Guemes Salta'
+      },
+      {
+        id: 'EV-04',
+        categoria: 'SOCIALES',
+        titulo: '🥖 Feria Barrial de Emprendedores y Economía Social',
+        fecha: 'Sábados — 09:00 a 14:00 hs',
+        lugar: 'Plaza San Martín / Predio Ferroviario',
+        localidad: 'El Bordo',
+        descripcion: 'Feria social solidaria con productores locales de El Bordo, Campo Santo y Betania.',
+        mapaQuery: 'El Bordo General Guemes Salta Argentina'
+      },
+      {
+        id: 'EV-05',
+        categoria: 'CULTURALES',
+        titulo: '🎭 Feria Cultural, Turística y de Artesanos del Valle de Siancas',
+        fecha: 'Domingos — 16:00 a 22:00 hs',
+        lugar: 'Paseo de los Artesanos / Plaza Principal',
+        localidad: 'Campo Santo',
+        descripcion: 'Exposición de artesanías en cuero, madera y tejido, comidas regionales (empanadas, tamales, humitas y dulces) y música en vivo.',
+        mapaQuery: 'Campo Santo Salta Argentina'
+      }
+    ];
+
+    const PARADAS_DEFAULT = [
+      { id: 'PAR-01', localidad: 'General Güemes', nombre: '🚏 Terminal de Ómnibus Gral. Güemes (Cabecera)', direccion: 'Av. Hipólito Yrigoyen y Alberdi', frecuencia: 'Salidas cada 20 min (06:00 a 23:00 hs)', coords: '-24.6672,-65.0475', query: 'Terminal de Omnibus General Guemes Salta' },
+      { id: 'PAR-02', localidad: 'General Güemes', nombre: '🚏 Parada Hospital Dr. Joaquín Castellanos', direccion: 'Av. Cabred frente a Guardia Central', frecuencia: 'Paso continuo cada 20 min', coords: '-24.6625,-65.0432', query: 'Hospital Joaquin Castellanos General Guemes Salta' },
+      { id: 'PAR-03', localidad: 'General Güemes', nombre: '🚏 Parada Plaza Central / Municipalidad', direccion: 'Calle San Martín y Sarmiento (Centro)', frecuencia: 'Paso continuo cada 20 min', coords: '-24.6691,-65.0468', query: 'Plaza Central General Guemes Salta' },
+      { id: 'PAR-04', localidad: 'General Güemes', nombre: '🚏 Parada Barrio Santa Teresita / El Cruce', direccion: 'Acceso Ruta Nacional 34 y Av. principal', frecuencia: 'Cada 25 min hacia Campo Santo / El Bordo', coords: '-24.6745,-65.0510', query: 'Barrio Santa Teresita General Guemes Salta' },
+      { id: 'PAR-05', localidad: 'Campo Santo', nombre: '🚏 Parada Principal Plaza de Campo Santo', direccion: 'Frente a Municipalidad de Campo Santo (Ruta Prov. 11)', frecuencia: 'Conexión Gral. Güemes - Campo Santo - El Bordo cada 30 min', coords: '-24.6938,-65.0933', query: 'Municipalidad de Campo Santo Salta' },
+      { id: 'PAR-06', localidad: 'Campo Santo', nombre: '🚏 Parada Ingenio San Isidro / Punto Digital', direccion: 'Av. Principal acceso Ingenio', frecuencia: 'Cada 30 min', coords: '-24.6965,-65.0970', query: 'Ingenio San Isidro Campo Santo Salta' },
+      { id: 'PAR-07', localidad: 'El Bordo', nombre: '🚏 Parada Central Municipalidad de El Bordo', direccion: 'Av. San Martín y Estación', frecuencia: 'Conexión directa a Campo Santo y Gral. Güemes cada 30 min', coords: '-24.6680,-65.1115', query: 'El Bordo Salta Argentina' },
+      { id: 'PAR-08', localidad: 'Betania', nombre: '🚏 Parada Betania — Colegio Sec. N° 5207 Héroes de Malvinas', direccion: 'Ruta Provincial 11 — Acceso Betania', frecuencia: 'Horarios escolares y frecuencias interurbanas', coords: '-24.7161,-65.1252', query: 'Betania General Guemes Salta Argentina' }
+    ];
 
     const pausa = (ms) => new Promise(res => setTimeout(res, ms));
 
@@ -1596,7 +2159,7 @@
       mostrarBienvenidaOHistorial();
     };
 
-    // Funciones del Menú Lateral Izquierdo
+    // Funciones del Menú Lateral Izquierdo y Carpetas Acordeón
     function abrirMenuLateral() {
       document.getElementById('drawerOverlay').classList.add('open');
       document.getElementById('sideDrawer').classList.add('open');
@@ -1605,6 +2168,16 @@
     function cerrarMenuLateral() {
       document.getElementById('drawerOverlay').classList.remove('open');
       document.getElementById('sideDrawer').classList.remove('open');
+    }
+
+    function toggleCarpetaMenu(idCarpeta) {
+      const carpeta = document.getElementById(idCarpeta);
+      if (!carpeta) return;
+      const estabaAbierta = carpeta.classList.contains('open');
+      document.querySelectorAll('.folder-card').forEach(c => c.classList.remove('open'));
+      if (!estabaAbierta) {
+        carpeta.classList.add('open');
+      }
     }
 
     function toggleUserBar() {
@@ -1682,6 +2255,9 @@
       } else if (/^EMP-/i.test(codigo)) {
         localStorage.setItem('muni_mi_emp_id', codigo.toUpperCase());
         mostrarToast(`📋 Código ${codigo} guardado para editar tu emprendimiento`);
+      } else if (/^REM-/i.test(codigo)) {
+        localStorage.setItem('muni_mi_rem_id', codigo.toUpperCase());
+        mostrarToast(`🚕 Código ${codigo} guardado para tu panel de remisero`);
       } else {
         registrarTicketLocal(codigo);
         document.getElementById('userInput').value = `Quiero consultar el estado de mi reclamo ${codigo}`;
@@ -1709,16 +2285,13 @@
         await pausa(180);
         agregarMensajeUI(
           'bot',
-          '¡Hola vecino! 👋 Bienvenido al canal oficial de el equipo de trabajo de la **Municipalidad**.\n\n' +
-          '• Tocá el botón **☰** arriba a la izquierda para ver todas las opciones que tenés disponibles.\n' +
-          '• Tocá **🚀 Solicitar Herramientas / Microcrédito** si tenés un emprendimiento u oficio y necesitás apoyo de Desarrollo Humano.\n' +
-          '• Tocá **🛒 Feria y Guía de Oficios** para comprar o publicar lo que hacés en el pueblo.\n\n' + 
-
-          'Además también podés:\n' +
-          '• Consultar el estado de tus reclamos o trámites con el código que te dieron (ej: `#A1B2C3` o `PROY-1234`).\n' +
-          '• Enviar fotos, documentos o tu ubicación GPS para que el municipio pueda ayudarte mejor.\n\n' +
-          'En caso de que no encontrés tu opción o tengas problemas técnicos, escribinos al 3875-622260 y te ayudamos a resolverlo.\n\n' +
-          '⚠️ Recordá que este chat es solo para consultas y trámites con el  municipio.'
+          '¡Hola vecino! 👋 Bienvenido al Asistente Oficial de la **Municipalidad**.\n\n' +
+          'Tocá **☰ Menú** arriba a la izquierda para abrir las carpetas organizadas:\n' +
+          '• 🛠️ **Gestión Ciudadana:** Reclamos barriales, asistencia social y estado de trámites.\n' +
+          '• 🎉 **Eventos y Ferias Municipales:** Fechas y mapas de fiestas, ferias sociales y culturales.\n' +
+          '• 🛒 **Feria Digital y Producción:** Guía de oficios y solicitud de herramientas/microcréditos.\n' +
+          '• 🚕 **Transporte y Movilidad:** Remises disponibles ahora y mapa de paradas del Colectivo Urbano en todo el Dpto. General Güemes.\n\n' +
+          'En caso de consultas técnicas, escribinos al **3875-622260**.'
         );
       } else {
         for (let i = 0; i < historialChat.length; i++) {
@@ -1778,6 +2351,454 @@
       }
     }
 
+    // =========================================================================
+    // MÓDULO NUEVO 1: EVENTOS MUNICIPALES, FERIAS SOCIALES Y CULTURALES
+    // =========================================================================
+    function abrirModalEventos(categoriaInicial) {
+      document.getElementById('modalEventos').classList.add('open');
+      cambiarTabEventos(categoriaInicial || 'FIESTAS');
+      cargarEventosYFeriasDelServidor();
+    }
+
+    function cerrarModalEventos() {
+      document.getElementById('modalEventos').classList.remove('open');
+      document.getElementById('mapaEventoWrapper').style.display = 'none';
+    }
+
+    function cambiarTabEventos(cat) {
+      tabEventoActual = cat;
+      document.getElementById('tabEvFiestas').classList.toggle('active', cat === 'FIESTAS');
+      document.getElementById('tabEvSociales').classList.toggle('active', cat === 'SOCIALES');
+      document.getElementById('tabEvCulturales').classList.toggle('active', cat === 'CULTURALES');
+      document.getElementById('mapaEventoWrapper').style.display = 'none';
+      renderListaEventos();
+    }
+
+    async function cargarEventosYFeriasDelServidor() {
+      try {
+        const res = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ accion: 'listarEventosYFeriasPublico' }),
+          redirect: 'follow'
+        });
+        const d = await res.json();
+        if (d.status === 'success' && Array.isArray(d.eventos) && d.eventos.length > 0) {
+          listaEventosYFerias = d.eventos;
+        } else {
+          listaEventosYFerias = EVENTOS_DEFAULT;
+        }
+      } catch (e) {
+        listaEventosYFerias = EVENTOS_DEFAULT;
+      }
+      renderListaEventos();
+    }
+
+    function verMapaEvento(titulo, queryUbicacion) {
+      const wrap = document.getElementById('mapaEventoWrapper');
+      const iframe = document.getElementById('iframeMapaEvento');
+      document.getElementById('tituloMapaEvento').textContent = '📍 ' + titulo;
+      iframe.src = 'https://maps.google.com/maps?q=' + encodeURIComponent(queryUbicacion) + '&t=m&z=15&output=embed';
+      wrap.style.display = 'block';
+    }
+
+    function renderListaEventos() {
+      const cont = document.getElementById('contenedorEventosLista');
+      const fuente = listaEventosYFerias.length > 0 ? listaEventosYFerias : EVENTOS_DEFAULT;
+      const filtrados = fuente.filter(ev => String(ev.categoria || '').toUpperCase() === tabEventoActual);
+
+      if (filtrados.length === 0) {
+        cont.innerHTML = '<div style="text-align:center;padding:24px;background:#f8fafc;border-radius:12px;color:#64748b;font-weight:700;">📅 Próximamente se publicarán nuevas fechas en esta sección.</div>';
+        return;
+      }
+
+      cont.innerHTML = filtrados.map(ev => {
+        const queryMapa = ev.mapaQuery || `${ev.lugar}, ${ev.localidad || 'General Güemes'}, Salta, Argentina`;
+        const textoVoz = `${ev.titulo}. Fecha: ${ev.fecha}. Lugar: ${ev.lugar}, ${ev.localidad || ''}. ${ev.descripcion}`.replace(/['"\n]/g, ' ');
+        return `
+          <div class="emp-card">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px;">
+              <h4 style="font-size:15.5px;font-weight:800;color:#0f172a;">${ev.titulo}</h4>
+              <span class="emp-badge-barrio">📍 ${ev.localidad || 'Dpto. Güemes'}</span>
+            </div>
+            <div style="font-size:13px;font-weight:800;color:#1d4ed8;margin-bottom:6px;">
+              🗓️ ${ev.fecha} • 📌 ${ev.lugar}
+            </div>
+            <div class="emp-desc">${ev.descripcion}</div>
+            <div class="emp-actions">
+              <button type="button" class="btn-tts" onclick="escucharTexto(this, '${textoVoz}')" style="padding:9px 12px;font-size:12.5px;">🔊 Escuchar</button>
+              <button type="button" class="btn-wa-emp" style="background:#2563eb;border:none;cursor:pointer;" onclick="verMapaEvento('${ev.titulo.replace(/'/g, "\\'")}', '${queryMapa.replace(/'/g, "\\'")}')">
+                🗺️ Ver Ubicación en Mapa
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // =========================================================================
+    // MÓDULO NUEVO 2: GESTIÓN DE REMISEROS (BUSCAR + ALTA + PANEL CHOFER PIN)
+    // =========================================================================
+    function abrirModalRemises(tabInicial) {
+      const nomVec = document.getElementById('vecinoNombre').value.trim();
+      const telVec = document.getElementById('vecinoTelefono').value.trim();
+      const pinVec = document.getElementById('vecinoPin').value.trim();
+      const idRemGuardado = localStorage.getItem('muni_mi_rem_id') || '';
+
+      if (nomVec && !document.getElementById('remNombre').value) document.getElementById('remNombre').value = nomVec;
+      if (telVec && !document.getElementById('remTelefono').value) document.getElementById('remTelefono').value = telVec;
+      if (pinVec && !document.getElementById('remPinCrear').value) document.getElementById('remPinCrear').value = pinVec;
+
+      if (!document.getElementById('loginRemisDato').value) {
+        document.getElementById('loginRemisDato').value = telVec || idRemGuardado || '';
+      }
+      if (pinVec && !document.getElementById('loginRemisPin').value) {
+        document.getElementById('loginRemisPin').value = pinVec;
+      }
+
+      document.getElementById('modalRemises').classList.add('open');
+      cambiarTabRemises(tabInicial || 'BUSCAR');
+      cargarRemiserosPublicos();
+    }
+
+    function cerrarModalRemises() {
+      document.getElementById('modalRemises').classList.remove('open');
+    }
+
+    function cambiarTabRemises(tab) {
+      document.getElementById('vistaRemisBuscar').style.display = tab === 'BUSCAR' ? 'block' : 'none';
+      document.getElementById('vistaRemisAlta').style.display = tab === 'ALTA' ? 'block' : 'none';
+      document.getElementById('vistaRemisEstado').style.display = tab === 'ESTADO' ? 'block' : 'none';
+
+      document.getElementById('tabRemisBuscar').classList.toggle('active', tab === 'BUSCAR');
+      document.getElementById('tabRemisAlta').classList.toggle('active', tab === 'ALTA');
+      document.getElementById('tabRemisEstado').classList.toggle('active', tab === 'ESTADO');
+    }
+
+    async function cargarRemiserosPublicos() {
+      const cont = document.getElementById('contenedorRemises');
+      cont.innerHTML = '<div style="text-align:center;padding:24px;color:#64748b;font-weight:700;">⏳ Buscando remises habilitados en tiempo real...</div>';
+      try {
+        const res = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ accion: 'listarRemiserosPublico' }),
+          redirect: 'follow'
+        });
+        const d = await res.json();
+        listaRemiserosPublicos = d.remiseros || [];
+        renderListaRemises();
+      } catch (e) {
+        cont.innerHTML = '<div style="text-align:center;padding:20px;color:#dc2626;">⚠️ No se pudo sincronizar la central de remises en este momento.</div>';
+      }
+    }
+
+    function renderListaRemises() {
+      const cont = document.getElementById('contenedorRemises');
+      const fLoc = document.getElementById('filtroRemisLocalidad').value;
+      const fDisp = document.getElementById('filtroRemisDisponibilidad').value;
+
+      const filtrados = listaRemiserosPublicos.filter(r => {
+        if (fLoc !== 'TODAS' && !String(r.origen || '').toLowerCase().includes(fLoc.toLowerCase())) return false;
+        if (fDisp === 'DISPONIBLES' && !String(r.disponibilidad || '').includes('Disponible')) return false;
+        return true;
+      });
+
+      if (filtrados.length === 0) {
+        cont.innerHTML = `
+          <div style="text-align:center;padding:22px;background:#f8fafc;border-radius:14px;border:1.5px dashed #cbd5e1;">
+            <div style="font-size:32px;margin-bottom:6px;">🚕</div>
+            <div style="font-size:14.5px;font-weight:800;color:#1e293b;">No hay remises activos con este filtro ahora</div>
+            <p style="font-size:13px;color:#475569;margin:6px 0 12px 0;">Podés cambiar el filtro a "Ver Todo el Padrón" o si sos remisero darte de alta gratis:</p>
+            <button type="button" class="chip transporte-chip" onclick="cambiarTabRemises('ALTA')">➕ Soy Remisero: Darme de Alta</button>
+          </div>
+        `;
+        return;
+      }
+
+      cont.innerHTML = filtrados.map(r => {
+        const estaLibre = String(r.disponibilidad || '').includes('Disponible');
+        const badgeDisp = estaLibre
+          ? '<span class="emp-badge-verif">🟢 Disponible para viajar</span>'
+          : `<span class="emp-badge-ocupado">${r.disponibilidad || '🔴 Ocupado'}</span>`;
+
+        const htmlFoto = (r.foto && r.foto.startsWith('http'))
+          ? `<img src="${r.foto}" class="emp-photo" alt="${r.nombre}" onclick="window.open('${r.foto}', '_blank')" />`
+          : `<div class="emp-photo">🚕</div>`;
+
+        let telWa = String(r.telefono || '').replace(/\D/g, '');
+        if (telWa && !telWa.startsWith('54')) {
+          telWa = '549' + telWa.replace(/^0+/, '').replace(/^15/, '');
+        }
+        const msgWa = encodeURIComponent(`¡Hola ${r.nombre}! 🚕 Vi en la App Municipal que estás en la Central de Remises (${r.auto}) y quería consultarte si estás disponible para un viaje.`);
+        const linkWa = `https://wa.me/${telWa}?text=${msgWa}`;
+
+        return `
+          <div class="emp-card" style="border-left: 5px solid ${estaLibre ? '#10b981' : '#f59e0b'};">
+            <div class="emp-card-top">
+              ${htmlFoto}
+              <div class="emp-info">
+                <h4>${r.nombre} <small style="font-size:12px;color:#64748b;font-weight:600;">(${r.edad ? r.edad + ' años' : 'Chofer'})</small></h4>
+                <div class="emp-badges">
+                  ${badgeDisp}
+                  <span class="emp-badge-barrio">📍 Base: ${r.origen || 'Gral. Güemes'}</span>
+                </div>
+                <div style="font-size:11.5px;color:#475569;margin-top:4px;font-weight:700;">
+                  🪪 DNI Verificado: ${r.dni || 'En legajo'} • ✅ Habilitado
+                </div>
+              </div>
+            </div>
+
+            <div class="remis-meta-grid">
+              <div><strong>🚗 Vehículo:</strong><br>${r.auto || 'Sedán 4 puertas'}</div>
+              <div><strong>🗺️ Llega hasta:</strong><br>${r.destinos || 'Todo el Dpto. Güemes'}</div>
+            </div>
+
+            <div style="margin-bottom:10px;">
+              <span class="emp-badge-tarifa" style="display:block;padding:6px 10px;font-size:12.5px;">
+                💲 <strong>Precios / Tarifa:</strong> ${r.tarifa || 'Según cuadro tarifario / A convenir'}
+              </span>
+            </div>
+
+            <div class="emp-actions">
+              <a href="${linkWa}" target="_blank" class="btn-wa-emp">📲 Pedir Viaje por WhatsApp</a>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function procesarFotoRemis(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const procesado = await procesarUnArchivo(file);
+      if (procesado) {
+        fotoRemisTmp = procesado;
+        const btn = document.getElementById('btnSubirFotoRem');
+        btn.innerHTML = `✅ Foto lista: ${procesado.fileName}`;
+        btn.classList.add('active-gps');
+        mostrarToast('📸 Foto del vehículo/chofer cargada');
+      }
+    }
+
+    async function enviarAltaRemisero() {
+      const nombre = document.getElementById('remNombre').value.trim();
+      const edad = document.getElementById('remEdad').value.trim();
+      const dni = document.getElementById('remDni').value.trim();
+      const telefono = document.getElementById('remTelefono').value.trim();
+      const auto = document.getElementById('remAuto').value.trim();
+      const origen = document.getElementById('remOrigen').value;
+      const destinos = document.getElementById('remDestinos').value.trim();
+      const tarifa = document.getElementById('remTarifa').value.trim();
+      const pinElegido = document.getElementById('remPinCrear').value.replace(/\D/g, '').substring(0, 4);
+
+      if (!nombre || !dni || !telefono || !auto) {
+        mostrarToast('⚠️ Completá tu Nombre, DNI, WhatsApp y los datos de tu Auto');
+        return;
+      }
+
+      const btn = document.getElementById('btnEnviarRemis');
+      btn.disabled = true;
+      btn.textContent = '⏳ Enviando solicitud al Secretario...';
+
+      try {
+        const res = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            accion: 'registrarRemisero',
+            nombre, edad, dni, telefono, auto, origen, destinos, tarifa,
+            pinVecino: pinElegido || document.getElementById('vecinoPin').value.trim(),
+            fotoBase64: fotoRemisTmp ? fotoRemisTmp.fileBase64 : null,
+            fotoNombre: fotoRemisTmp ? fotoRemisTmp.fileName : null,
+            fotoMime: fotoRemisTmp ? fotoRemisTmp.mimeType : null
+          }),
+          redirect: 'follow'
+        });
+        const data = await res.json();
+
+        if (data.status !== 'success') {
+          mostrarToast('⚠️ ' + (data.mensaje || 'Error al registrar remisero'));
+          return;
+        }
+
+        if (data.id) localStorage.setItem('muni_mi_rem_id', data.id);
+        if (data.pinAsignado) {
+          document.getElementById('vecinoPin').value = data.pinAsignado;
+          document.getElementById('loginRemisPin').value = data.pinAsignado;
+        }
+        guardarDatosVecino();
+
+        cerrarModalRemises();
+        agregarMensajeUI('bot', data.respuesta);
+      } catch (e) {
+        mostrarToast('⚠️ Error de conexión. Intentá nuevamente.');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '✅ Solicitar Alta como Remisero';
+      }
+    }
+
+    async function verificarPinChoferRemis() {
+      const busqueda = document.getElementById('loginRemisDato').value.trim();
+      const pin = document.getElementById('loginRemisPin').value.replace(/\D/g, '').substring(0, 4);
+
+      if (!busqueda || pin.length !== 4) {
+        mostrarToast('⚠️ Ingresá tu WhatsApp (o código REM-...) y tu PIN de 4 dígitos');
+        return;
+      }
+
+      const btn = document.getElementById('btnVerificarChofer');
+      btn.disabled = true;
+      btn.textContent = '⏳ Verificando credenciales...';
+
+      try {
+        const res = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ accion: 'buscarMiRemisConPin', busqueda, pin }),
+          redirect: 'follow'
+        });
+        const d = await res.json();
+
+        if (d.status === 'success' && d.remisero) {
+          const r = d.remisero;
+          document.getElementById('editRemId').value = r.id;
+          document.getElementById('saludoChoferActivo').innerHTML = `🔓 <strong>${r.nombre}</strong> (${r.id})`;
+          document.getElementById('editRemDisponibilidad').value = r.disponibilidad || '🟢 Disponible';
+          document.getElementById('editRemAuto').value = r.auto || '';
+          document.getElementById('editRemDestinos').value = r.destinos || '';
+          document.getElementById('editRemTarifa').value = r.tarifa || '';
+          document.getElementById('editRemTelefono').value = r.telefono || '';
+
+          document.getElementById('bloqueLoginChofer').style.display = 'none';
+          document.getElementById('bloquePanelChoferActivo').style.display = 'block';
+          mostrarToast('🔓 Panel de Chofer habilitado');
+        } else {
+          mostrarToast(d.mensaje || '⛔ PIN incorrecto o chofer no encontrado');
+        }
+      } catch (e) {
+        mostrarToast('⚠️ Error al conectar con el servidor');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '🔓 Ingresar a mi Panel de Chofer';
+      }
+    }
+
+    function cerrarSesionChofer() {
+      document.getElementById('bloquePanelChoferActivo').style.display = 'none';
+      document.getElementById('bloqueLoginChofer').style.display = 'block';
+    }
+
+    async function guardarEstadoChoferRemis() {
+      const id = document.getElementById('editRemId').value.trim();
+      const pin = document.getElementById('loginRemisPin').value.replace(/\D/g, '').substring(0, 4);
+      const disponibilidad = document.getElementById('editRemDisponibilidad').value;
+      const auto = document.getElementById('editRemAuto').value.trim();
+      const destinos = document.getElementById('editRemDestinos').value.trim();
+      const tarifa = document.getElementById('editRemTarifa').value.trim();
+      const telefono = document.getElementById('editRemTelefono').value.trim();
+
+      const btn = document.getElementById('btnGuardarEstadoChofer');
+      btn.disabled = true;
+      btn.textContent = '⏳ Actualizando tu estado...';
+
+      try {
+        const res = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            accion: 'editarMiRemisVecino',
+            id, pin, disponibilidad, auto, destinos, tarifa, telefono
+          }),
+          redirect: 'follow'
+        });
+        const d = await res.json();
+        if (d.status === 'success') {
+          mostrarToast('✅ Estado actualizado a: ' + disponibilidad);
+          cambiarTabRemises('BUSCAR');
+          cargarRemiserosPublicos();
+        } else {
+          mostrarToast(d.mensaje || '⚠️ No se pudo actualizar');
+        }
+      } catch (e) {
+        mostrarToast('⚠️ Error de conexión');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '💾 Actualizar mi Disponibilidad y Datos';
+      }
+    }
+
+    // =========================================================================
+    // MÓDULO NUEVO 3: COLECTIVO URBANO Y MAPA DE PARADAS (DPTO. GRAL. GÜEMES)
+    // =========================================================================
+    function abrirModalColectivos() {
+      document.getElementById('modalColectivos').classList.add('open');
+      cargarParadasColectivoServidor();
+    }
+
+    function cerrarModalColectivos() {
+      document.getElementById('modalColectivos').classList.remove('open');
+    }
+
+    async function cargarParadasColectivoServidor() {
+      try {
+        const res = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ accion: 'listarParadasPublico' }),
+          redirect: 'follow'
+        });
+        const d = await res.json();
+        if (d.status === 'success' && Array.isArray(d.paradas) && d.paradas.length > 0) {
+          listaParadasColectivo = d.paradas;
+        } else {
+          listaParadasColectivo = PARADAS_DEFAULT;
+        }
+      } catch (e) {
+        listaParadasColectivo = PARADAS_DEFAULT;
+      }
+      renderParadasColectivo();
+    }
+
+    function centrarMapaEnParada(coordsOQuery, elItem) {
+      document.querySelectorAll('.parada-item').forEach(el => el.classList.remove('active-stop'));
+      if (elItem) elItem.classList.add('active-stop');
+      const iframe = document.getElementById('iframeMapaColectivos');
+      iframe.src = 'https://maps.google.com/maps?q=' + encodeURIComponent(coordsOQuery) + '&t=m&z=16&output=embed';
+      mostrarToast('🗺️ Mapa centrado en la parada seleccionada');
+    }
+
+    function renderParadasColectivo() {
+      const cont = document.getElementById('contenedorParadasColectivo');
+      const loc = document.getElementById('filtroLocalidadColectivo').value;
+      const fuente = listaParadasColectivo.length > 0 ? listaParadasColectivo : PARADAS_DEFAULT;
+
+      const filtradas = fuente.filter(p => loc === 'TODAS' || String(p.localidad || '').toLowerCase().includes(loc.toLowerCase()));
+
+      if (filtradas.length > 0) {
+        const primera = filtradas[0].coords || filtradas[0].query;
+        document.getElementById('iframeMapaColectivos').src = 'https://maps.google.com/maps?q=' + encodeURIComponent(primera) + '&t=m&z=15&output=embed';
+      }
+
+      cont.innerHTML = filtradas.map((p, idx) => {
+        const destinoMapa = (p.coords && p.coords.trim() !== '') ? p.coords : (p.query || `${p.direccion}, ${p.localidad}, Salta`);
+        return `
+          <div class="parada-item ${idx === 0 ? 'active-stop' : ''}" onclick="centrarMapaEnParada('${destinoMapa.replace(/'/g, "\\'")}', this)">
+            <div>
+              <div style="font-size:14px;font-weight:800;color:#0f172a;">${p.nombre}</div>
+              <div style="font-size:12.5px;color:#334155;margin-top:2px;">📍 <strong>${p.localidad}:</strong> ${p.direccion}</div>
+              <div style="font-size:11.5px;color:#0f766e;font-weight:700;margin-top:3px;">🕒 ${p.frecuencia || 'Frecuencia regular'}</div>
+            </div>
+            <span style="font-size:12px;font-weight:800;color:#2563eb;white-space:nowrap;">Ver Mapa 📍</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // =========================================================================
+    // ARCHIVOS ADJUNTOS, GPS Y PROYECTOS / FERIA DIGITAL EXISTENTES
+    // =========================================================================
     function actualizarBandejaAdjuntos() {
       const tray = document.getElementById('attachmentsTray');
       const gpsPill = document.getElementById('gpsReadyPill');
@@ -1932,9 +2953,7 @@
       actualizarBandejaAdjuntos();
     }
 
-    // =========================================================================
-    // MÓDULO NUEVO: ARMADOR DE PROYECTOS PRODUCTIVOS CON IA (MICROCRÉDITOS / HERRAMIENTAS)
-    // =========================================================================
+    // Proyectos Productivos
     function abrirModalProyecto() {
       const nomVec = document.getElementById('vecinoNombre').value.trim();
       const barVec = document.getElementById('vecinoBarrio').value;
@@ -1964,10 +2983,7 @@
       }
     }
 
-
-    // =========================================================================
-    // MÓDULO FERIA DIGITAL Y GUÍA DE EMPRENDEDORES (EXPLORAR + ANOTARME + EDITAR)
-    // =========================================================================
+    // Feria Digital
     function abrirModalFeria(tabInicial) {
       const nomVec = document.getElementById('vecinoNombre').value.trim();
       const barVec = document.getElementById('vecinoBarrio').value;
@@ -2008,7 +3024,7 @@
 
     async function cargarEmprendedoresDelPueblo() {
       const cont = document.getElementById('contenedorEmprendedores');
-      cont.innerHTML = '<div style="text-align:center;padding:24px;color:#64748b;font-weight:700;">⏳ Cargando emprendedores y oficios del pueblo...</div>';
+      cont.innerHTML = '<div style="text-align:center;padding:24px;color:#64748b;font-weight:700;">⏳ Cargando emprendedores y oficios...</div>';
       try {
         const res = await fetch(SCRIPT_URL, {
           method: 'POST',
@@ -2049,7 +3065,7 @@
           <div style="text-align:center;padding:22px;background:#f8fafc;border-radius:14px;border:1.5px dashed #cbd5e1;">
             <div style="font-size:32px;margin-bottom:6px;">🌱</div>
             <div style="font-size:14.5px;font-weight:800;color:#1e293b;">Todavía no hay vecinos anotados en este rubro</div>
-            <p style="font-size:13px;color:#475569;margin:6px 0 12px 0;">¿Vos vendés algo o trabajás de este oficio en el pueblo?</p>
+            <p style="font-size:13px;color:#475569;margin:6px 0 12px 0;">¿Vendés algo o trabajás de este oficio?</p>
             <button type="button" class="chip feria-chip" onclick="cambiarTabFeria('ANOTARME')">➕ Anotarme primero gratis</button>
           </div>
         `;
@@ -2106,12 +3122,6 @@
       }
     }
 
-
-     
-
-    // =========================================================================
-    // FUNCIONES DE EDICIÓN SEGURA DEL EMPRENDEDOR (CON VALIDACIÓN DE PIN)
-    // =========================================================================
     function volverALoginEditarEmp() {
       document.getElementById('bloqueFormularioEditarEmp').style.display = 'none';
       document.getElementById('bloqueLoginEditarEmp').style.display = 'block';
@@ -2165,7 +3175,7 @@
           document.getElementById('bloqueFormularioEditarEmp').style.display = 'block';
           mostrarToast('🔓 PIN verificado correctamente');
         } else {
-          mostrarToast(data.mensaje || '⛔ No se pudo verificar tu PIN o no encontramos el emprendimiento');
+          mostrarToast(data.mensaje || '⛔ No se pudo verificar tu PIN');
         }
       } catch (e) {
         mostrarToast('⚠️ Error de conexión al verificar tus datos');
@@ -2230,7 +3240,7 @@
       const pinVec = document.getElementById('vecinoPin').value.trim();
 
       if (!nombre || !telefono || !necesidad) {
-        mostrarToast('⚠️ Completá tu Nombre, tu WhatsApp y qué herramientas o materiales necesitás');
+        mostrarToast('⚠️ Completá tu Nombre, tu WhatsApp y qué herramientas necesitás');
         return;
       }
 
@@ -2273,7 +3283,7 @@
 
         if (data.status !== 'success') {
           mostrarToast('⚠️ ' + (data.mensaje || 'Error al registrar el proyecto'));
-          agregarMensajeUI('bot', '⚠️ No pudimos registrar el proyecto: ' + (data.mensaje || 'Verificá la publicación del script.'));
+          agregarMensajeUI('bot', '⚠️ No pudimos registrar el proyecto: ' + (data.mensaje || 'Intentá de nuevo.'));
           return;
         }
 
@@ -2289,14 +3299,13 @@
         btnFoto.innerHTML = '📸 Sacar o Subir una Foto de mi trabajo';
         btnFoto.classList.remove('active-gps');
 
-        // Única respuesta oficial proveniente del backend
         agregarMensajeUI('bot', data.respuesta);
       } catch (err) {
         typing.style.display = 'none';
         agregarMensajeUI('bot', '⚠️ Hubo una demora en la conexión. Intentá nuevamente.');
       } finally {
         btn.disabled = false;
-        btn.textContent = '🚀 Armar mi Carpeta Técnica en PDF y Enviar';
+        btn.textContent = '🚀 Armar mi Carpeta Técnica y Enviar';
       }
     }
 
@@ -2359,7 +3368,6 @@
         btnFoto.classList.remove('active-gps');
 
         cerrarModalFeria();
-        // Única respuesta oficial proveniente del backend
         agregarMensajeUI('bot', data.respuesta);
       } catch (e) {
         mostrarToast('⚠️ Error de conexión. Intentá de nuevo.');
@@ -2406,7 +3414,6 @@
           mostrarToast(data.mensaje);
           volverALoginEditarEmp();
           cerrarModalFeria();
-          // Única respuesta oficial proveniente del backend
           agregarMensajeUI('bot', data.respuesta);
         } else {
           mostrarToast(data.mensaje || '⚠️ No se pudieron guardar los cambios');
@@ -2419,8 +3426,7 @@
       }
     }
 
-
-    // Dictado por voz para cualquier campo de texto de los formularios
+    // Dictado por voz para cualquier campo
     function dictarEnCampo(idCampo) {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       if (!SpeechRecognition) {
@@ -2443,9 +3449,7 @@
       recognition.start();
     }
 
-    // =========================================================================
-    // MODALES DE RECLAMOS Y TICKETS
-    // =========================================================================
+    // Modales de Reclamos y Tickets
     function abrirModalReclamo(modo) {
       const modal = document.getElementById('modalReclamo');
       const titulo = document.getElementById('modalReclamoTitulo');
@@ -2642,7 +3646,6 @@
       }
     }
 
-    // LIMPIEZA TOTAL: Borra conversación, tickets guardados Y TODOS los campos de contacto
     function limpiarChat() {
       if (!confirm('¿Querés borrar toda la conversación y limpiar todos tus datos de contacto de la pantalla?')) {
         return;
@@ -2655,6 +3658,7 @@
       localStorage.removeItem('muni_vecino_pin');
       localStorage.removeItem('muni_mis_tickets');
       localStorage.removeItem('muni_mi_emp_id');
+      localStorage.removeItem('muni_mi_rem_id');
 
       document.getElementById('vecinoNombre').value = '';
       document.getElementById('vecinoBarrio').value = '';
@@ -2675,6 +3679,7 @@
       document.getElementById('proyTelefono').value = '';
       document.getElementById('proyNecesidad').value = '';
       volverALoginEditarEmp();
+      cerrarSesionChofer();
 
       historialChat = [];
       misTickets = [];

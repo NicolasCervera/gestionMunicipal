@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MuniGestor - Operaciones, Proyectos, Feria y Estadísticas</title>
+  <title>MuniGestor - Operaciones, Proyectos, Feria, Eventos y Transporte</title>
   <style>
     :root {
       --primary: #0f172a;
@@ -71,7 +71,7 @@
     }
     .btn-top:hover { background: rgba(255,255,255,0.24); }
 
-    .container { max-width: 1260px; margin: 20px auto; padding: 0 16px; }
+    .container { max-width: 1280px; margin: 20px auto; padding: 0 16px; }
 
     /* KPIs Interactivos */
     .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(175px, 1fr)); gap: 12px; margin-bottom: 18px; }
@@ -99,8 +99,8 @@
       display: inline-flex; background: var(--border); padding: 4px; border-radius: 12px; gap: 4px; flex-wrap: wrap;
     }
     .tab-btn {
-      border: none; background: transparent; padding: 9px 15px; border-radius: 9px;
-      font-size: 13px; font-weight: 700; color: var(--muted); cursor: pointer; transition: all 0.2s;
+      border: none; background: transparent; padding: 9px 13px; border-radius: 9px;
+      font-size: 12.5px; font-weight: 700; color: var(--muted); cursor: pointer; transition: all 0.2s;
       display: inline-flex; align-items: center; gap: 6px;
     }
     .tab-btn.active {
@@ -119,7 +119,9 @@
     .btn-export.active-view { background: #eff6ff; border-color: var(--accent); color: var(--accent); }
 
     /* SECCIONES OCULTAS POR DEFECTO */
-    #vistaReportes, #vistaEmprendedores, #vistaProyectos { display: none; margin-bottom: 24px; animation: fadeIn 0.25s ease; }
+    #vistaReportes, #vistaEmprendedores, #vistaProyectos, #vistaEventos, #vistaRemises, #vistaColectivos {
+      display: none; margin-bottom: 24px; animation: fadeIn 0.25s ease;
+    }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 
     .reports-grid {
@@ -155,7 +157,7 @@
 
     /* Barra de Filtros Mejorada */
     .filters-wrapper {
-      background: var(--card); padding: 14px; border-radius: 14px; border: 1px solid var(--border);
+      background: var(--card); padding: 16px; border-radius: 14px; border: 1px solid var(--border);
       margin-bottom: 16px; box-shadow: var(--shadow);
     }
     .filters {
@@ -195,6 +197,9 @@
     .card.resuelto { border-left-color: var(--green); opacity: 0.92; }
     .card.emp-card-admin { border-left-color: var(--purple); }
     .card.proy-card-admin { border-left-color: var(--teal-proy); }
+    .card.evento-card-admin { border-left-color: var(--accent); }
+    .card.remis-card-admin { border-left-color: var(--amber); }
+    .card.colectivo-card-admin { border-left-color: var(--teal); }
     .card.unsaved-changes {
       border-color: var(--amber);
       box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
@@ -320,8 +325,8 @@
   <div id="loginScreen">
     <div class="login-card">
       <h2>🏛️ MuniGestor</h2>
-      <p>Panel Operativo, Proyectos y Feria Digital</p>
-      <input type="text" id="opNombre" placeholder="Tu Nombre / Responsable" />
+      <p>Panel Operativo, Feria, Eventos y Transporte</p>
+      <input type="text" id="opNombre" placeholder="Tu Nombre / Secretario / Operador" />
       <select id="opArea">
         <option value="TODAS">📋 Ver Todas las Áreas</option>
         <option value="Obras y Servicios">🛠️ Obras y Servicios</option>
@@ -339,15 +344,15 @@
 
   <div class="topbar">
     <div class="topbar-left">
-      <h1>🏛️ MuniGestor — Operaciones, Proyectos y Feria Digital</h1>
+      <h1>🏛️ MuniGestor — Operaciones, Eventos, Feria y Transporte</h1>
       <div class="topbar-meta">
         <span id="opInfo">Operador</span>
         <span class="sync-pill" id="lastSyncInfo">⏳ Sincronizando...</span>
       </div>
     </div>
-    <div style="display:flex; gap:8px; align-items:center;">
+    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
       <button type="button" class="btn-top" onclick="toggleDarkMode()" id="btnTheme" title="Cambiar modo de color">🌙 Modo Oscuro</button>
-      <button type="button" class="btn-top" onclick="fetchReclamos(); fetchEmprendedoresAdmin(); fetchProyectosAdmin();">🔄 Actualizar Todo</button>
+      <button type="button" class="btn-top" onclick="sincronizarTodo()">🔄 Actualizar Todo</button>
       <button type="button" class="btn-top" onclick="logout()">Salir</button>
     </div>
   </div>
@@ -392,17 +397,22 @@
       </div>
     </div>
 
-    <!-- Barra de Pestañas (Bandeja vs Proyectos Productivos vs Feria Digital vs Reportes) -->
+    <!-- Barra de Pestañas Completa -->
     <div class="nav-tabs">
       <div class="tab-group">
-        <button type="button" class="tab-btn active" id="tabBandeja" onclick="cambiarVista('bandeja')">📋 Bandeja de Reclamos</button>
+        <button type="button" class="tab-btn active" id="tabBandeja" onclick="cambiarVista('bandeja')">📋 Reclamos</button>
+        <button type="button" class="tab-btn" id="tabEventos" onclick="cambiarVista('eventos')">🎉 Eventos y Ferias</button>
+        <button type="button" class="tab-btn" id="tabRemises" onclick="cambiarVista('remises')">
+          🚕 Aprobar Remiseros <span class="badge-pend-emp" id="badgeRemPendientes" style="display:none;">0</span>
+        </button>
+        <button type="button" class="tab-btn" id="tabColectivos" onclick="cambiarVista('colectivos')">🚌 Colectivo y Paradas</button>
         <button type="button" class="tab-btn" id="tabProyectos" onclick="cambiarVista('proyectos')">
-          🚀 Proyectos y Microcréditos <span class="badge-pend-emp" id="badgeProyPendientes" style="display:none;">0</span>
+          🚀 Proyectos IA <span class="badge-pend-emp" id="badgeProyPendientes" style="display:none;">0</span>
         </button>
         <button type="button" class="tab-btn" id="tabEmprendedores" onclick="cambiarVista('emprendedores')">
-          🛒 Aprobar Emprendedores y Feria <span class="badge-pend-emp" id="badgeEmpPendientes" style="display:none;">0</span>
+          🛒 Feria Digital <span class="badge-pend-emp" id="badgeEmpPendientes" style="display:none;">0</span>
         </button>
-        <button type="button" class="tab-btn" id="tabReportes" onclick="cambiarVista('reportes')">📊 Reportes por Barrio y Vecino</button>
+        <button type="button" class="tab-btn" id="tabReportes" onclick="cambiarVista('reportes')">📊 Estadísticas</button>
       </div>
       <div class="toolbar-right">
         <button type="button" class="btn-export" id="btnVistaCompacta" onclick="toggleVistaCompacta()">📐 Vista 2 Columnas</button>
@@ -411,7 +421,157 @@
       </div>
     </div>
 
-    <!-- NUEVA VISTA: EVALUACIÓN Y APROBACIÓN DE PROYECTOS PRODUCTIVOS (MICROCRÉDITOS / BANCO DE HERRAMIENTAS) -->
+    <!-- ===================================================================== -->
+    <!-- NUEVA VISTA 1: GESTIÓN DE EVENTOS MUNICIPALES, FERIAS SOCIALES Y CULTURALES -->
+    <!-- ===================================================================== -->
+    <div id="vistaEventos">
+      <div class="filters-wrapper">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
+          <div>
+            <h3 style="font-size:16px;font-weight:800;color:var(--accent);">🎉 Administración de Eventos Municipales, Ferias Sociales y Culturales</h3>
+            <p style="font-size:12.5px;color:var(--muted);">Publicá fechas, horarios y ubicaciones de Fiestas Municipales, Ferias Sociales y Ferias Culturales/Turísticas con mapa incluido.</p>
+          </div>
+          <select id="filtroCatEventoAdmin" onchange="renderEventosAdmin()" style="padding:9px 12px;border-radius:9px;border:1px solid var(--border);background:var(--card-sub);color:var(--text);font-weight:700;">
+            <option value="TODAS">📋 Todas las Categorías</option>
+            <option value="FIESTAS">🎉 Solo Eventos y Fiestas Municipales</option>
+            <option value="SOCIALES">🤝 Solo Ferias Sociales</option>
+            <option value="CULTURALES">🎭 Solo Ferias Culturales y Turísticas</option>
+          </select>
+        </div>
+
+        <!-- Formulario para Crear Nuevo Evento o Feria Presencial -->
+        <div style="background:var(--card-sub);padding:14px;border-radius:12px;border:1px dashed var(--border);">
+          <div style="font-size:13px;font-weight:800;margin-bottom:10px;color:var(--text);">➕ Publicar Nuevo Evento o Feria Presencial</div>
+          <div class="controls">
+            <div class="field-group">
+              <label class="field-label">Categoría</label>
+              <select id="nuevoEvCategoria">
+                <option value="FIESTAS">🎉 Evento / Fiesta Municipal</option>
+                <option value="SOCIALES">🤝 Feria Social</option>
+                <option value="CULTURALES">🎭 Feria Cultural y Turística</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label class="field-label">Título del Evento o Feria</label>
+              <input type="text" id="nuevoEvTitulo" placeholder="Ej: Feria Social Barrial / Festival Folclórico" />
+            </div>
+            <div class="field-group">
+              <label class="field-label">Fecha y Horario</label>
+              <input type="text" id="nuevoEvFecha" placeholder="Ej: Sábado 15/11 — 09:00 a 14:00 hs" />
+            </div>
+            <div class="field-group">
+              <label class="field-label">Localidad</label>
+              <select id="nuevoEvLocalidad">
+                <option value="General Güemes">📍 General Güemes</option>
+                <option value="Campo Santo">📍 Campo Santo</option>
+                <option value="El Bordo">📍 El Bordo</option>
+                <option value="Betania">📍 Betania</option>
+                <option value="Cobos">📍 Cobos</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label class="field-label">Predio / Dirección</label>
+              <input type="text" id="nuevoEvLugar" placeholder="Ej: Plaza Central / Paseo de los Artesanos" />
+            </div>
+            <div class="field-group">
+              <label class="field-label">Búsqueda en Google Maps (O Coordenadas)</label>
+              <input type="text" id="nuevoEvMapa" placeholder="Ej: Plaza Central General Guemes Salta" />
+            </div>
+          </div>
+          <div class="field-group" style="margin-bottom:10px;">
+            <label class="field-label">Descripción de Actividades / Puestos / Artistas</label>
+            <input type="text" id="nuevoEvDesc" style="padding:9px 11px;border:1px solid var(--border);border-radius:8px;background:var(--card);color:var(--text);" placeholder="Detalle del evento, entrada, puestos disponibles..." />
+          </div>
+          <button type="button" class="btn-save" onclick="crearNuevoEventoAdmin()">➕ Publicar en la App Ciudadana</button>
+        </div>
+      </div>
+
+      <div class="claims" id="contenedorEventosAdmin"></div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- NUEVA VISTA 2: GESTIÓN Y APROBACIÓN DE REMISEROS (POR EL SECRETARIO) -->
+    <!-- ===================================================================== -->
+    <div id="vistaRemises">
+      <div class="filters-wrapper">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+          <div>
+            <h3 style="font-size:16px;font-weight:800;color:var(--amber);">🚕 Padrón y Aprobación de Remiseros del Departamento</h3>
+            <p style="font-size:12.5px;color:var(--muted);">Verificá el DNI, edad, vehículo, localidad de origen, destinos y tarifas de cada chofer. Aprobá o rechazá su alta y avisale por WhatsApp.</p>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <select id="filtroEstadoRemis" onchange="renderRemiserosAdmin()" style="padding:9px 12px;border-radius:9px;border:1px solid var(--border);background:var(--card-sub);color:var(--text);font-weight:700;">
+              <option value="TODOS">📋 Ver Todos los Remiseros</option>
+              <option value="⏳ Pendiente">⏳ Solo Pendientes de Aprobar</option>
+              <option value="✅ Aprobado">✅ Solo Aprobados y Publicados</option>
+              <option value="❌ Rechazado">❌ Rechazados / Ocultos</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="claims" id="contenedorRemiserosAdmin"></div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- NUEVA VISTA 3: GESTIÓN DE COLECTIVO URBANO Y PARADAS (DPTO. GÜEMES) -->
+    <!-- ===================================================================== -->
+    <div id="vistaColectivos">
+      <div class="filters-wrapper">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
+          <div>
+            <h3 style="font-size:16px;font-weight:800;color:var(--teal);">🚌 Gestión de Paradas del Colectivo Urbano — Dpto. General Güemes</h3>
+            <p style="font-size:12.5px;color:var(--muted);">Agregá o actualizá las paradas habilitadas, frecuencias y coordenadas de Google Maps en General Güemes, Campo Santo, El Bordo y Betania.</p>
+          </div>
+          <select id="filtroLocParadaAdmin" onchange="renderParadasAdmin()" style="padding:9px 12px;border-radius:9px;border:1px solid var(--border);background:var(--card-sub);color:var(--text);font-weight:700;">
+            <option value="TODAS">📍 Todo el Departamento</option>
+            <option value="General Güemes">📍 General Güemes</option>
+            <option value="Campo Santo">📍 Campo Santo</option>
+            <option value="El Bordo">📍 El Bordo</option>
+            <option value="Betania">📍 Betania</option>
+          </select>
+        </div>
+
+        <!-- Formulario para Agregar Nueva Parada de Colectivo -->
+        <div style="background:var(--card-sub);padding:14px;border-radius:12px;border:1px dashed var(--border);">
+          <div style="font-size:13px;font-weight:800;margin-bottom:10px;color:var(--text);">➕ Agregar Nueva Parada al Mapa Urbano</div>
+          <div class="controls">
+            <div class="field-group">
+              <label class="field-label">Localidad</label>
+              <select id="nuevaParLocalidad">
+                <option value="General Güemes">📍 General Güemes</option>
+                <option value="Campo Santo">📍 Campo Santo</option>
+                <option value="El Bordo">📍 El Bordo</option>
+                <option value="Betania">📍 Betania</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label class="field-label">Nombre de la Parada</label>
+              <input type="text" id="nuevaParNombre" placeholder="Ej: 🚏 Parada Hospital Castellanos" />
+            </div>
+            <div class="field-group">
+              <label class="field-label">Calle / Referencia Exacta</label>
+              <input type="text" id="nuevaParDireccion" placeholder="Ej: Av. Cabred frente a Guardia" />
+            </div>
+            <div class="field-group">
+              <label class="field-label">Horarios / Frecuencia</label>
+              <input type="text" id="nuevaParFrecuencia" placeholder="Ej: Paso cada 20 min (06:00 a 23:00)" />
+            </div>
+            <div class="field-group">
+              <label class="field-label">Coordenadas GPS o Dirección para Mapa</label>
+              <input type="text" id="nuevaParCoords" placeholder="Ej: -24.6625,-65.0432" />
+            </div>
+          </div>
+          <button type="button" class="btn-save" style="background:var(--teal);" onclick="crearNuevaParadaAdmin()">➕ Guardar Parada en el Mapa</button>
+        </div>
+      </div>
+
+      <div class="claims" id="contenedorParadasAdmin"></div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- VISTA: EVALUACIÓN Y APROBACIÓN DE PROYECTOS PRODUCTIVOS CON IA -->
+    <!-- ===================================================================== -->
     <div id="vistaProyectos">
       <div class="filters-wrapper">
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
@@ -434,7 +594,9 @@
       <div class="claims" id="contenedorProyectosAdmin"></div>
     </div>
 
-    <!-- VISTA: GESTIÓN, EDICIÓN COMPLETA Y APROBACIÓN DE EMPRENDEDORES (FERIA DIGITAL) -->
+    <!-- ===================================================================== -->
+    <!-- VISTA: ADMINISTRACIÓN DE EMPRENDEDORES (FERIA DIGITAL) -->
+    <!-- ===================================================================== -->
     <div id="vistaEmprendedores">
       <div class="filters-wrapper">
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
@@ -456,7 +618,9 @@
       <div class="claims" id="contenedorEmprendedoresAdmin"></div>
     </div>
 
+    <!-- ===================================================================== -->
     <!-- VISTA DE REPORTES ANALÍTICOS -->
+    <!-- ===================================================================== -->
     <div id="vistaReportes">
       <div class="reports-grid">
         <div class="report-card">
@@ -494,7 +658,9 @@
       </div>
     </div>
 
+    <!-- ===================================================================== -->
     <!-- VISTA BANDEJA OPERATIVA DE RECLAMOS -->
+    <!-- ===================================================================== -->
     <div id="vistaBandeja">
       <div class="filters-wrapper">
         <div class="filters">
@@ -535,12 +701,14 @@
   </div>
 
   <script>
-    // URL corregida con una sola "c" al final (/exec)
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzN9JTD4pd9VvzvuooKmjCzYZ6VwPN9RmBBdAmRRaGV4MTPcKBSTTPeB9cS2QbFaJWe/exec';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxT7U0FSkmHYzNdny6Wg2rpCc-uAvqiJU1IZZOlGg83f4VMh5Uy9YsCOyd0WlZtSWma/exec';
 
     let datos = [];
     let datosEmprendedores = [];
     let datosProyectos = [];
+    let datosEventos = [];
+    let datosRemiseros = [];
+    let datosParadas = [];
     let evidenciasTmp = {};
 
     window.onload = function() {
@@ -556,11 +724,18 @@
         document.getElementById('loginScreen').style.display = 'none';
         document.getElementById('opInfo').innerText = 'Usuario: ' + localStorage.getItem('muni_op') + ' | Área: ' + localStorage.getItem('muni_area');
         document.getElementById('filtroArea').value = localStorage.getItem('muni_area') || 'TODAS';
-        fetchReclamos();
-        fetchEmprendedoresAdmin();
-        fetchProyectosAdmin();
+        sincronizarTodo();
       }
     };
+
+    function sincronizarTodo() {
+      fetchReclamos();
+      fetchEmprendedoresAdmin();
+      fetchProyectosAdmin();
+      fetchRemiserosAdmin();
+      fetchEventosAdmin();
+      fetchParadasAdmin();
+    }
 
     function toggleDarkMode() {
       const isDark = document.body.classList.toggle('dark-mode');
@@ -582,7 +757,7 @@
         alert('Por favor ingresá el PIN de acceso');
         return;
       }
-      const op = document.getElementById('opNombre').value.trim() || 'Operador';
+      const op = document.getElementById('opNombre').value.trim() || 'Secretario / Operador';
       const area = document.getElementById('opArea').value;
 
       localStorage.setItem('muni_pin', pin);
@@ -592,9 +767,7 @@
       document.getElementById('loginScreen').style.display = 'none';
       document.getElementById('opInfo').innerText = 'Usuario: ' + op + ' | Área: ' + area;
       document.getElementById('filtroArea').value = area;
-      fetchReclamos();
-      fetchEmprendedoresAdmin();
-      fetchProyectosAdmin();
+      sincronizarTodo();
     }
 
     function logout() {
@@ -610,17 +783,24 @@
     }
 
     function copiarCodigo(id) {
-      navigator.clipboard.writeText(id.startsWith('PROY-') || id.startsWith('EMP-') ? id : '#' + id);
-      showToast('📋 Código ' + id + ' copiado al portapapeles');
+      const limpio = /^(PROY-|EMP-|REM-|EV-|PAR-)/.test(id) ? id : '#' + id;
+      navigator.clipboard.writeText(limpio);
+      showToast('📋 Código ' + limpio + ' copiado al portapapeles');
     }
 
     function cambiarVista(vista) {
       document.getElementById('vistaBandeja').style.display = vista === 'bandeja' ? 'block' : 'none';
+      document.getElementById('vistaEventos').style.display = vista === 'eventos' ? 'block' : 'none';
+      document.getElementById('vistaRemises').style.display = vista === 'remises' ? 'block' : 'none';
+      document.getElementById('vistaColectivos').style.display = vista === 'colectivos' ? 'block' : 'none';
       document.getElementById('vistaProyectos').style.display = vista === 'proyectos' ? 'block' : 'none';
       document.getElementById('vistaEmprendedores').style.display = vista === 'emprendedores' ? 'block' : 'none';
       document.getElementById('vistaReportes').style.display = vista === 'reportes' ? 'block' : 'none';
 
       document.getElementById('tabBandeja').classList.toggle('active', vista === 'bandeja');
+      document.getElementById('tabEventos').classList.toggle('active', vista === 'eventos');
+      document.getElementById('tabRemises').classList.toggle('active', vista === 'remises');
+      document.getElementById('tabColectivos').classList.toggle('active', vista === 'colectivos');
       document.getElementById('tabProyectos').classList.toggle('active', vista === 'proyectos');
       document.getElementById('tabEmprendedores').classList.toggle('active', vista === 'emprendedores');
       document.getElementById('tabReportes').classList.toggle('active', vista === 'reportes');
@@ -628,10 +808,595 @@
       if (vista === 'reportes') generarReportes();
       if (vista === 'emprendedores') fetchEmprendedoresAdmin();
       if (vista === 'proyectos') fetchProyectosAdmin();
+      if (vista === 'eventos') fetchEventosAdmin();
+      if (vista === 'remises') fetchRemiserosAdmin();
+      if (vista === 'colectivos') fetchParadasAdmin();
     }
 
     // =========================================================================
-    // MÓDULO NUEVO: EVALUACIÓN Y APROBACIÓN DE PROYECTOS PRODUCTIVOS CON IA
+    // NUEVO MÓDULO ADMIN 1: EVENTOS MUNICIPALES, FERIAS SOCIALES Y CULTURALES
+    // =========================================================================
+    async function fetchEventosAdmin() {
+      const cont = document.getElementById('contenedorEventosAdmin');
+      try {
+        const res = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ accion: 'listarEventosAdmin', pin: localStorage.getItem('muni_pin') }),
+          redirect: 'follow'
+        });
+        const d = await res.json();
+        if (d.status === 'success') {
+          datosEventos = d.eventos || [];
+          renderEventosAdmin();
+        }
+      } catch (e) {
+        if (cont) cont.innerHTML = '<div style="padding:20px;color:var(--red);">Error al cargar eventos y ferias.</div>';
+      }
+    }
+
+    async function crearNuevoEventoAdmin() {
+      const categoria = document.getElementById('nuevoEvCategoria').value;
+      const titulo = document.getElementById('nuevoEvTitulo').value.trim();
+      const fecha = document.getElementById('nuevoEvFecha').value.trim();
+      const localidad = document.getElementById('nuevoEvLocalidad').value;
+      const lugar = document.getElementById('nuevoEvLugar').value.trim();
+      const mapaQuery = document.getElementById('nuevoEvMapa').value.trim() || (lugar + ', ' + localidad + ', Salta, Argentina');
+      const descripcion = document.getElementById('nuevoEvDesc').value.trim();
+
+      if (!titulo || !fecha || !lugar) {
+        alert('⚠️ Completá al menos el Título, la Fecha/Hora y el Lugar del evento o feria.');
+        return;
+      }
+
+      showToast('⏳ Publicando evento/feria...');
+      try {
+        const res = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            accion: 'guardarEventoAdmin',
+            pin: localStorage.getItem('muni_pin'),
+            id: '',
+            categoria: categoria,
+            titulo: titulo,
+            fecha: fecha,
+            localidad: localidad,
+            lugar: lugar,
+            descripcion: descripcion,
+            mapaQuery: mapaQuery,
+            estado: '✅ Activo',
+            operador: localStorage.getItem('muni_op') || 'Secretario'
+          }),
+          redirect: 'follow'
+        });
+        const d = await res.json();
+        if (d.status === 'success') {
+          document.getElementById('nuevoEvTitulo').value = '';
+          document.getElementById('nuevoEvFecha').value = '';
+          document.getElementById('nuevoEvLugar').value = '';
+          document.getElementById('nuevoEvMapa').value = '';
+          document.getElementById('nuevoEvDesc').value = '';
+          showToast('✅ Evento/Feria publicado con éxito');
+          fetchEventosAdmin();
+        } else {
+          alert('No se pudo guardar: ' + (d.mensaje || ''));
+        }
+      } catch (e) {
+        alert('Error de conexión al publicar el evento.');
+      }
+    }
+
+    function renderEventosAdmin() {
+      const cont = document.getElementById('contenedorEventosAdmin');
+      const filtro = document.getElementById('filtroCatEventoAdmin').value;
+
+      const filtrados = datosEventos.filter(function(ev) {
+        if (filtro === 'TODAS') return true;
+        return String(ev.categoria || '').toUpperCase() === filtro;
+      });
+
+      if (filtrados.length === 0) {
+        cont.innerHTML = '<div style="text-align:center; padding:35px; color:var(--muted); background:var(--card); border-radius:14px; border:1px solid var(--border);">🎉 Todavía no hay eventos o ferias cargados en esta categoría. Usá el formulario de arriba para publicar el primero.</div>';
+        return;
+      }
+
+      cont.innerHTML = filtrados.map(function(ev) {
+        const activo = String(ev.estado || '').includes('Activo');
+        const badgeEst = activo
+          ? '<span class="badge-prio prio-inf">✅ Publicado en App</span>'
+          : '<span class="badge-prio prio-urg">❌ Oculto / Finalizado</span>';
+
+        const titSeg = String(ev.titulo || '').replace(/"/g, '&quot;');
+        const fecSeg = String(ev.fecha || '').replace(/"/g, '&quot;');
+        const lugSeg = String(ev.lugar || '').replace(/"/g, '&quot;');
+        const locSeg = String(ev.localidad || 'General Güemes').replace(/"/g, '&quot;');
+        const mapSeg = String(ev.mapaQuery || '').replace(/"/g, '&quot;');
+        const urlEmbed = 'https://maps.google.com/maps?q=' + encodeURIComponent(ev.mapaQuery || (ev.lugar + ' ' + ev.localidad + ' Salta')) + '&t=m&z=15&output=embed';
+
+        return '<div class="card evento-card-admin" id="card_ev_' + ev.id + '">' +
+          '<div class="card-header">' +
+            '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">' +
+              '<span class="badge-id" onclick="copiarCodigo(\'' + ev.id + '\')">' + ev.id + ' 📋</span>' +
+              badgeEst +
+              '<span class="badge-barrio">📂 ' + ev.categoria + '</span>' +
+            '</div>' +
+            '<span class="time-ago">📍 ' + locSeg + '</span>' +
+          '</div>' +
+
+          '<div class="controls">' +
+            '<div class="field-group">' +
+              '<label class="field-label">Categoría</label>' +
+              '<select id="cat_ev_' + ev.id + '">' +
+                '<option value="FIESTAS" ' + (ev.categoria === 'FIESTAS' ? 'selected' : '') + '>🎉 Evento / Fiesta Municipal</option>' +
+                '<option value="SOCIALES" ' + (ev.categoria === 'SOCIALES' ? 'selected' : '') + '>🤝 Feria Social</option>' +
+                '<option value="CULTURALES" ' + (ev.categoria === 'CULTURALES' ? 'selected' : '') + '>🎭 Feria Cultural y Turística</option>' +
+              '</select>' +
+            '</div>' +
+            '<div class="field-group">' +
+              '<label class="field-label">Título del Evento / Feria</label>' +
+              '<input type="text" id="tit_ev_' + ev.id + '" value="' + titSeg + '" />' +
+            '</div>' +
+            '<div class="field-group">' +
+              '<label class="field-label">Fecha y Horario</label>' +
+              '<input type="text" id="fec_ev_' + ev.id + '" value="' + fecSeg + '" />' +
+            '</div>' +
+            '<div class="field-group">' +
+              '<label class="field-label">Localidad</label>' +
+              '<input type="text" id="loc_ev_' + ev.id + '" value="' + locSeg + '" />' +
+            '</div>' +
+            '<div class="field-group">' +
+              '<label class="field-label">Predio / Ubicación</label>' +
+              '<input type="text" id="lug_ev_' + ev.id + '" value="' + lugSeg + '" />' +
+            '</div>' +
+            '<div class="field-group">' +
+              '<label class="field-label">Búsqueda en Mapa / Coordenadas</label>' +
+              '<input type="text" id="map_ev_' + ev.id + '" value="' + mapSeg + '" />' +
+            '</div>' +
+          '</div>' +
+
+          '<div class="field-group" style="margin-bottom:8px;">' +
+            '<label class="field-label">Descripción</label>' +
+            '<textarea id="desc_ev_' + ev.id + '" class="textarea-nota" style="margin-bottom:6px;">' + (ev.descripcion || '') + '</textarea>' +
+          '</div>' +
+
+          '<div class="map-drawer" id="map_drawer_' + ev.id + '">' +
+            '<div class="map-drawer-header">' +
+              '<span>🗺️ Vista Previa del Mapa del Evento</span>' +
+              '<button type="button" onclick="toggleMapaTarjeta(\'' + ev.id + '\')" style="border:none;background:transparent;cursor:pointer;font-weight:800;color:#1e3a8a;">✖ Cerrar</button>' +
+            '</div>' +
+            '<iframe id="map_iframe_' + ev.id + '" src="about:blank" loading="lazy"></iframe>' +
+          '</div>' +
+
+          '<div class="actions">' +
+            '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
+              '<button type="button" class="btn-save" onclick="actualizarEventoExistente(\'' + ev.id + '\', \'✅ Activo\')">💾 Guardar y Publicar</button>' +
+              (activo
+                ? '<button type="button" class="btn-evidencia" onclick="actualizarEventoExistente(\'' + ev.id + '\', \'❌ Oculto\')">⏸️ Ocultar / Finalizar</button>'
+                : '<button type="button" class="btn-save" style="background:#16a34a;" onclick="actualizarEventoExistente(\'' + ev.id + '\', \'✅ Activo\')">✅ Volver a Activar</button>') +
+              '<button type="button" class="btn-evidencia btn-geo-gps" onclick="toggleMapaTarjeta(\'' + ev.id + '\', \'' + urlEmbed.replace(/'/g, "\\'") + '\')">📍 Probar Mapa</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    }
+
+    async function actualizarEventoExistente(id, nuevoEstado) {
+      showToast('⏳ Guardando cambios del evento...');
+      try {
+        const res = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            accion: 'guardarEventoAdmin',
+            pin: localStorage.getItem('muni_pin'),
+            id: id,
+            categoria: document.getElementById('cat_ev_' + id).value,
+            titulo: document.getElementById('tit_ev_' + id).value.trim(),
+            fecha: document.getElementById('fec_ev_' + id).value.trim(),
+            localidad: document.getElementById('loc_ev_' + id).value.trim(),
+            lugar: document.getElementById('lug_ev_' + id).value.trim(),
+            mapaQuery: document.getElementById('map_ev_' + id).value.trim(),
+            descripcion: document.getElementById('desc_ev_' + id).value.trim(),
+            estado: nuevoEstado,
+            operador: localStorage.getItem('muni_op') || 'Secretario'
+          }),
+          redirect: 'follow'
+        });
+        const d = await res.json();
+        if (d.status === 'success') {
+          showToast('✅ Evento ' + id + ' actualizado');
+          fetchEventosAdmin();
+        }
+      } catch (e) {
+        alert('Error al guardar cambios del evento.');
+      }
+    }
+
+    // =========================================================================
+    // NUEVO MÓDULO ADMIN 2: APROBACIÓN Y GESTIÓN DE REMISEROS
+    // =========================================================================
+    async function fetchRemiserosAdmin() {
+      const cont = document.getElementById('contenedorRemiserosAdmin');
+      try {
+        const res = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ accion: 'listarRemiserosAdmin', pin: localStorage.getItem('muni_pin') }),
+          redirect: 'follow'
+        });
+        const d = await res.json();
+        if (d.status === 'success') {
+          datosRemiseros = d.remiseros || [];
+          const cantPend = datosRemiseros.filter(function(r) { return String(r.estado).includes('Pendiente'); }).length;
+          const badge = document.getElementById('badgeRemPendientes');
+          if (cantPend > 0) {
+            badge.style.display = 'inline-block';
+            badge.innerText = cantPend;
+          } else {
+            badge.style.display = 'none';
+          }
+          renderRemiserosAdmin();
+        }
+      } catch (e) {
+        if (cont) cont.innerHTML = '<div style="padding:20px;color:var(--red);">Error al cargar padrón de remiseros.</div>';
+      }
+    }
+
+    function renderRemiserosAdmin() {
+      const cont = document.getElementById('contenedorRemiserosAdmin');
+      const filtro = document.getElementById('filtroEstadoRemis').value;
+
+      const filtrados = datosRemiseros.filter(function(r) {
+        if (filtro === 'TODOS') return true;
+        return String(r.estado) === filtro;
+      });
+
+      if (filtrados.length === 0) {
+        cont.innerHTML = '<div style="text-align:center; padding:35px; color:var(--muted); background:var(--card); border-radius:14px; border:1px solid var(--border);">🚕 No hay remiseros registrados en este estado actualmente.</div>';
+        return;
+      }
+
+      cont.innerHTML = filtrados.map(function(rem) {
+        const aprobado = String(rem.estado).includes('Aprobado');
+        const pendiente = String(rem.estado).includes('Pendiente');
+
+        const badgeEstado = aprobado
+          ? '<span class="badge-prio prio-inf">✅ Habilitado por Secretario</span>'
+          : (pendiente
+              ? '<span class="badge-prio prio-ges">⏳ Pendiente de Aprobación</span>'
+              : '<span class="badge-prio prio-urg">❌ Rechazado / Oculto</span>');
+
+        const htmlFoto = (rem.foto && rem.foto.startsWith('http'))
+          ? '<a href="' + rem.foto + '" target="_blank" class="att-link">📸 Ver Foto del Auto / Chofer</a>'
+          : '';
+
+        const nomSeg = String(rem.nombre || '').replace(/"/g, '&quot;');
+        const edadSeg = String(rem.edad || '').replace(/"/g, '&quot;');
+        const dniSeg = String(rem.dni || '').replace(/"/g, '&quot;');
+        const telSeg = String(rem.telefono || '').replace(/"/g, '&quot;');
+        const autoSeg = String(rem.auto || '').replace(/"/g, '&quot;');
+        const oriSeg = String(rem.origen || 'General Güemes').replace(/"/g, '&quot;');
+        const desSeg = String(rem.destinos || '').replace(/"/g, '&quot;');
+        const tarSeg = String(rem.tarifa || '').replace(/"/g, '&quot;');
+        const pinSeg = String(rem.pin || '').replace(/"/g, '&quot;');
+
+        let botonesIzq = '';
+        if (aprobado) {
+          botonesIzq =
+            '<button type="button" class="btn-save" onclick="cambiarEstadoRemis(\'' + rem.id + '\', \'✅ Aprobado\')">💾 Guardar Cambios</button>' +
+            '<button type="button" class="btn-evidencia" onclick="cambiarEstadoRemis(\'' + rem.id + '\', \'❌ Rechazado\')">⏸️ Suspender / Ocultar</button>';
+        } else {
+          botonesIzq =
+            '<button type="button" class="btn-save" style="background:#16a34a;" onclick="cambiarEstadoRemis(\'' + rem.id + '\', \'✅ Aprobado\')">✅ Aprobar Alta de Remisero</button>' +
+            '<button type="button" class="btn-save" onclick="cambiarEstadoRemis(\'' + rem.id + '\', \'' + rem.estado + '\')">💾 Guardar Cambios</button>' +
+            '<button type="button" class="btn-evidencia" onclick="cambiarEstadoRemis(\'' + rem.id + '\', \'❌ Rechazado\')">❌ Rechazar / Ocultar</button>';
+        }
+
+        return '<div class="card remis-card-admin" id="card_rem_' + rem.id + '">' +
+          '<div class="card-header">' +
+            '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">' +
+              '<span class="badge-id" onclick="copiarCodigo(\'' + rem.id + '\')">' + rem.id + ' 📋</span>' +
+              badgeEstado +
+              '<span class="badge-barrio">' + (rem.disponibilidad || '🟢 Disponible') + '</span>' +
+              (rem.pin ? '<span style="background:#fef3c7;color:#92400e;padding:3px 8px;border-radius:6px;font-weight:800;font-size:11.5px;">🔒 PIN Chofer: ' + rem.pin + '</span>' : '') +
+            '</div>' +
+            '<span class="time-ago">📅 ' + rem.fecha + (rem.verificador ? ' • Aprobó: ' + rem.verificador : '') + '</span>' +
+          '</div>' +
+
+          (htmlFoto ? '<div class="attachments-box">' + htmlFoto + '</div>' : '') +
+
+          '<div class="controls">' +
+            '<div class="field-group">' +
+              '<label class="field-label">👤 Nombre y Apellido</label>' +
+              '<input type="text" id="nom_rem_' + rem.id + '" value="' + nomSeg + '" />' +
+            '</div>' +
+            '<div class="field-group">' +
+              '<label class="field-label">🎂 Edad</label>' +
+              '<input type="text" id="eda_rem_' + rem.id + '" value="' + edadSeg + '" />' +
+            '</div>' +
+            '<div class="field-group">' +
+              '<label class="field-label">🪪 Documento (DNI)</label>' +
+              '<input type="text" id="dni_rem_' + rem.id + '" value="' + dniSeg + '" />' +
+            '</div>' +
+            '<div class="field-group">' +
+              '<label class="field-label">📱 WhatsApp del Chofer</label>' +
+              '<input type="tel" id="tel_rem_' + rem.id + '" value="' + telSeg + '" />' +
+            '</div>' +
+            '<div class="field-group">' +
+              '<label class="field-label">🚗 Vehículo (Modelo, Color, Patente)</label>' +
+              '<input type="text" id="aut_rem_' + rem.id + '" value="' + autoSeg + '" />' +
+            '</div>' +
+            '<div class="field-group">' +
+              '<label class="field-label">📍 De dónde es (Base)</label>' +
+              '<input type="text" id="ori_rem_' + rem.id + '" value="' + oriSeg + '" />' +
+            '</div>' +
+            '<div class="field-group">' +
+              '<label class="field-label">🗺️ A qué partes llega</label>' +
+              '<input type="text" id="des_rem_' + rem.id + '" value="' + desSeg + '" />' +
+            '</div>' +
+            '<div class="field-group">' +
+              '<label class="field-label">💲 Precios / Tarifa</label>' +
+              '<input type="text" id="tar_rem_' + rem.id + '" value="' + tarSeg + '" />' +
+            '</div>' +
+            '<div class="field-group">' +
+              '<label class="field-label">🚦 Disponibilidad Actual</label>' +
+              '<select id="disp_rem_' + rem.id + '">' +
+                '<option value="🟢 Disponible" ' + (String(rem.disponibilidad).includes('Disponible') ? 'selected' : '') + '>🟢 Disponible</option>' +
+                '<option value="🟡 En viaje" ' + (String(rem.disponibilidad).includes('viaje') ? 'selected' : '') + '>🟡 En viaje</option>' +
+                '<option value="🔴 Fuera de servicio" ' + (String(rem.disponibilidad).includes('Fuera') ? 'selected' : '') + '>🔴 Fuera de servicio</option>' +
+              '</select>' +
+            '</div>' +
+            '<div class="field-group">' +
+              '<label class="field-label">🔒 PIN del Chofer (4 núm)</label>' +
+              '<input type="text" id="pin_rem_' + rem.id + '" maxlength="4" value="' + pinSeg + '" />' +
+            '</div>' +
+          '</div>' +
+
+          '<div class="actions">' +
+            '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
+              botonesIzq +
+            '</div>' +
+            '<div>' +
+              '<button type="button" class="btn-wa" onclick="avisarRemiseroWhatsApp(\'' + rem.id + '\')">📲 Avisar Alta por WhatsApp</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    }
+
+    async function cambiarEstadoRemis(id, nuevoEstado) {
+      const nombre = document.getElementById('nom_rem_' + id).value.trim();
+      const telefono = document.getElementById('tel_rem_' + id).value.trim();
+      if (!nombre || !telefono) {
+        alert('⚠️ El nombre y el WhatsApp del remisero son obligatorios.');
+        return;
+      }
+
+      showToast('⏳ Guardando legajo del remisero...');
+      try {
+        const res = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            accion: 'cambiarEstadoRemisero',
+            pin: localStorage.getItem('muni_pin'),
+            id: id,
+            nuevoEstado: nuevoEstado,
+            nombreEditado: nombre,
+            edadEditada: document.getElementById('eda_rem_' + id).value.trim(),
+            dniEditado: document.getElementById('dni_rem_' + id).value.trim(),
+            telefonoEditado: telefono,
+            autoEditado: document.getElementById('aut_rem_' + id).value.trim(),
+            origenEditado: document.getElementById('ori_rem_' + id).value.trim(),
+            destinosEditados: document.getElementById('des_rem_' + id).value.trim(),
+            tarifaEditada: document.getElementById('tar_rem_' + id).value.trim(),
+            disponibilidadEditada: document.getElementById('disp_rem_' + id).value,
+            pinRemEditado: document.getElementById('pin_rem_' + id).value.replace(/\D/g, '').substring(0, 4),
+            operador: localStorage.getItem('muni_op') || 'Secretario'
+          }),
+          redirect: 'follow'
+        });
+        const d = await res.json();
+        if (d.status === 'success') {
+          showToast('✅ Remisero ' + id + ' actualizado (' + nuevoEstado + ')');
+          fetchRemiserosAdmin();
+        } else {
+          alert('No se pudo actualizar: ' + (d.mensaje || ''));
+        }
+      } catch (e) {
+        alert('Error de conexión al guardar remisero.');
+      }
+    }
+
+    function avisarRemiseroWhatsApp(id) {
+      const nom = document.getElementById('nom_rem_' + id).value.trim();
+      const tel = document.getElementById('tel_rem_' + id).value.trim();
+      const auto = document.getElementById('aut_rem_' + id).value.trim();
+      const pin = document.getElementById('pin_rem_' + id).value.trim();
+
+      let telWa = String(tel).replace(/\D/g, '');
+      if (telWa.length < 7) return alert('⚠️ Ingresá un número de WhatsApp válido.');
+      if (!telWa.startsWith('54')) telWa = '549' + telWa.replace(/^0+/, '').replace(/^15/, '');
+
+      const msg = encodeURIComponent(
+        '🚕 *CENTRAL MUNICIPAL DE TRANSPORTE*\n\n' +
+        '¡Hola *' + nom + '*! Te informamos que tu alta como remisero (*' + auto + '*) fue *APROBADA* por el Secretario Municipal.\n\n' +
+        '📌 *Tu Código de Chofer:* ' + id + '\n' +
+        '🔒 *Tu PIN para ponerte Disponible/Ocupado:* ' + pin + '\n\n' +
+        'Los vecinos ya pueden ver tu perfil y pedirte viajes directo a tu WhatsApp.'
+      );
+      window.open('https://wa.me/' + telWa + '?text=' + msg, '_blank');
+    }
+
+    // =========================================================================
+    // NUEVO MÓDULO ADMIN 3: COLECTIVO URBANO Y PARADAS (DPTO. GÜEMES)
+    // =========================================================================
+    async function fetchParadasAdmin() {
+      const cont = document.getElementById('contenedorParadasAdmin');
+      try {
+        const res = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ accion: 'listarParadasAdmin', pin: localStorage.getItem('muni_pin') }),
+          redirect: 'follow'
+        });
+        const d = await res.json();
+        if (d.status === 'success') {
+          datosParadas = d.paradas || [];
+          renderParadasAdmin();
+        }
+      } catch (e) {
+        if (cont) cont.innerHTML = '<div style="padding:20px;color:var(--red);">Error al cargar paradas de colectivo.</div>';
+      }
+    }
+
+    async function crearNuevaParadaAdmin() {
+      const localidad = document.getElementById('nuevaParLocalidad').value;
+      const nombre = document.getElementById('nuevaParNombre').value.trim();
+      const direccion = document.getElementById('nuevaParDireccion').value.trim();
+      const frecuencia = document.getElementById('nuevaParFrecuencia').value.trim();
+      const coords = document.getElementById('nuevaParCoords').value.trim() || (direccion + ', ' + localidad + ', Salta, Argentina');
+
+      if (!nombre || !direccion) {
+        alert('⚠️ Completá el nombre de la parada y su dirección/referencia.');
+        return;
+      }
+
+      showToast('⏳ Guardando parada de colectivo...');
+      try {
+        const res = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            accion: 'guardarParadaAdmin',
+            pin: localStorage.getItem('muni_pin'),
+            id: '',
+            localidad: localidad,
+            nombre: nombre,
+            direccion: direccion,
+            frecuencia: frecuencia,
+            coords: coords,
+            estado: '✅ Activa'
+          }),
+          redirect: 'follow'
+        });
+        const d = await res.json();
+        if (d.status === 'success') {
+          document.getElementById('nuevaParNombre').value = '';
+          document.getElementById('nuevaParDireccion').value = '';
+          document.getElementById('nuevaParFrecuencia').value = '';
+          document.getElementById('nuevaParCoords').value = '';
+          showToast('✅ Parada incorporada al mapa');
+          fetchParadasAdmin();
+        }
+      } catch (e) {
+        alert('Error de conexión al guardar la parada.');
+      }
+    }
+
+    function renderParadasAdmin() {
+      const cont = document.getElementById('contenedorParadasAdmin');
+      const filtro = document.getElementById('filtroLocParadaAdmin').value;
+
+      const filtradas = datosParadas.filter(function(p) {
+        if (filtro === 'TODAS') return true;
+        return String(p.localidad || '').toLowerCase().includes(filtro.toLowerCase());
+      });
+
+      if (filtradas.length === 0) {
+        cont.innerHTML = '<div style="text-align:center; padding:35px; color:var(--muted); background:var(--card); border-radius:14px; border:1px solid var(--border);">🚌 No hay paradas personalizadas cargadas en esta localidad (la app muestra las paradas oficiales por defecto hasta que agregues o edites una acá).</div>';
+        return;
+      }
+
+      cont.innerHTML = filtradas.map(function(p) {
+        const activa = String(p.estado || '').includes('Activa');
+        const urlEmbed = 'https://maps.google.com/maps?q=' + encodeURIComponent(p.coords || (p.direccion + ' ' + p.localidad + ' Salta')) + '&t=m&z=16&output=embed';
+
+        return '<div class="card colectivo-card-admin" id="card_par_' + p.id + '">' +
+          '<div class="card-header">' +
+            '<div style="display:flex;gap:8px;align-items:center;">' +
+              '<span class="badge-id">' + p.id + '</span>' +
+              (activa ? '<span class="badge-prio prio-inf">✅ Parada Activa</span>' : '<span class="badge-prio prio-urg">❌ Inactiva</span>') +
+              '<span class="badge-barrio">📍 ' + p.localidad + '</span>' +
+            '</div>' +
+          '</div>' +
+
+          '<div class="controls">' +
+            '<div class="field-group">' +
+              '<label class="field-label">Localidad</label>' +
+              '<input type="text" id="loc_par_' + p.id + '" value="' + String(p.localidad || '').replace(/"/g, '&quot;') + '" />' +
+            '</div>' +
+            '<div class="field-group">' +
+              '<label class="field-label">Nombre de la Parada</label>' +
+              '<input type="text" id="nom_par_' + p.id + '" value="' + String(p.nombre || '').replace(/"/g, '&quot;') + '" />' +
+            '</div>' +
+            '<div class="field-group">' +
+              '<label class="field-label">Dirección / Referencia</label>' +
+              '<input type="text" id="dir_par_' + p.id + '" value="' + String(p.direccion || '').replace(/"/g, '&quot;') + '" />' +
+            '</div>' +
+            '<div class="field-group">' +
+              '<label class="field-label">Frecuencia / Horarios</label>' +
+              '<input type="text" id="fre_par_' + p.id + '" value="' + String(p.frecuencia || '').replace(/"/g, '&quot;') + '" />' +
+            '</div>' +
+            '<div class="field-group">' +
+              '<label class="field-label">Coordenadas GPS o Búsqueda Maps</label>' +
+              '<input type="text" id="coo_par_' + p.id + '" value="' + String(p.coords || '').replace(/"/g, '&quot;') + '" />' +
+            '</div>' +
+          '</div>' +
+
+          '<div class="map-drawer" id="map_drawer_' + p.id + '">' +
+            '<div class="map-drawer-header">' +
+              '<span>🚏 Ubicación en Google Maps</span>' +
+              '<button type="button" onclick="toggleMapaTarjeta(\'' + p.id + '\')" style="border:none;background:transparent;cursor:pointer;font-weight:800;color:#1e3a8a;">✖ Cerrar</button>' +
+            '</div>' +
+            '<iframe id="map_iframe_' + p.id + '" src="about:blank" loading="lazy"></iframe>' +
+          '</div>' +
+
+          '<div class="actions">' +
+            '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
+              '<button type="button" class="btn-save" onclick="actualizarParadaExistente(\'' + p.id + '\', \'✅ Activa\')">💾 Guardar Cambios</button>' +
+              (activa
+                ? '<button type="button" class="btn-evidencia" onclick="actualizarParadaExistente(\'' + p.id + '\', \'❌ Inactiva\')">⏸️ Desactivar Parada</button>'
+                : '<button type="button" class="btn-save" style="background:#16a34a;" onclick="actualizarParadaExistente(\'' + p.id + '\', \'✅ Activa\')">✅ Activar Parada</button>') +
+              '<button type="button" class="btn-evidencia btn-geo-gps" onclick="toggleMapaTarjeta(\'' + p.id + '\', \'' + urlEmbed.replace(/'/g, "\\'") + '\')">🗺️ Ver en Mapa</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    }
+
+    async function actualizarParadaExistente(id, nuevoEstado) {
+      showToast('⏳ Actualizando parada...');
+      try {
+        const res = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            accion: 'guardarParadaAdmin',
+            pin: localStorage.getItem('muni_pin'),
+            id: id,
+            localidad: document.getElementById('loc_par_' + id).value.trim(),
+            nombre: document.getElementById('nom_par_' + id).value.trim(),
+            direccion: document.getElementById('dir_par_' + id).value.trim(),
+            frecuencia: document.getElementById('fre_par_' + id).value.trim(),
+            coords: document.getElementById('coo_par_' + id).value.trim(),
+            estado: nuevoEstado
+          }),
+          redirect: 'follow'
+        });
+        const d = await res.json();
+        if (d.status === 'success') {
+          showToast('✅ Parada ' + id + ' guardada');
+          fetchParadasAdmin();
+        }
+      } catch (e) {
+        alert('Error al actualizar parada.');
+      }
+    }
+
+    // =========================================================================
+    // MÓDULO EXISTENTE: PROYECTOS PRODUCTIVOS CON IA
     // =========================================================================
     async function fetchProyectosAdmin() {
       const cont = document.getElementById('contenedorProyectosAdmin');
@@ -688,7 +1453,7 @@
 
       const listaBarriosBase = [
         "Centro", "Santa Teresita", "San Cayetano", "El Cruce", "Centro 2",
-        "Luján", "25 de Mayo", "El Bordo", "Betania", "Zona Rural / Finca", "Otro Barrio"
+        "Luján", "25 de Mayo", "Campo Santo", "El Bordo", "Betania", "Zona Rural / Finca", "Otro Barrio"
       ];
 
       cont.innerHTML = filtrados.map(function(p) {
@@ -718,7 +1483,6 @@
             ? '<a href="' + p.foto + '" target="_blank" class="att-link">📸 Ver Foto del Trabajo</a>'
             : '');
 
-        // Si ya está "✅ Aprobado", NO mostramos de vuelta el botón "✅ Aprobar Proyecto / Herramientas"
         let botonesAccionIzq = '';
         if (estaAprobado) {
           botonesAccionIzq =
@@ -880,8 +1644,7 @@
 
       const linkPdf = (proy.pdfUrl && proy.pdfUrl.startsWith('http')) ? '\n📄 *Carpeta Técnica PDF:* ' + proy.pdfUrl : '';
       const msg = encodeURIComponent(
-        '🏛️ *SECRETARÍA DE DESARROLLO HUMANO*\n' +
-        '*Municipalidad de ...*\n\n' +
+        '🏛️ *SECRETARÍA DE DESARROLLO HUMANO*\n\n' +
         'Hola *' + nom + '*, te escribimos por tu *Proyecto Productivo (' + id + ')* del rubro *' + rub + '*.\n\n' +
         '📊 *Estado:* ' + (proy.estado || '⏳ En Evaluación') + '\n' +
         '📝 *Informe Oficial:* ' + (dict || 'Tu carpeta técnica se encuentra en evaluación por el equipo de fortalecimiento productivo.') +
@@ -890,7 +1653,6 @@
       window.open('https://wa.me/' + telWa + '?text=' + msg, '_blank');
     }
 
-    // Imprime una Carpeta Técnica formal lista para firmar o guardar como PDF
     function imprimirCarpetaProyecto(id) {
       const proy = datosProyectos.find(function(x) { return x.id === id; }) || {};
       const nom = document.getElementById('nom_proy_' + id) ? document.getElementById('nom_proy_' + id).value.trim() : (proy.nombre || '');
@@ -921,13 +1683,13 @@
           '.linea{border-top:1px solid #334155;padding-top:6px;margin-top:40px;}' +
         '</style></head><body>' +
         '<div class="head">' +
-          '<div><h1>CARPETA TÉCNICA DE PROYECTO PRODUCTIVO</h1><div style="font-size:13px;color:#475569;">Municipalidad de ... • Secretaría de Desarrollo Humano</div></div>' +
+          '<div><h1>CARPETA TÉCNICA DE PROYECTO PRODUCTIVO</h1><div style="font-size:13px;color:#475569;">Secretaría de Desarrollo Humano</div></div>' +
           '<div style="text-align:right;font-size:13px;"><strong>Expediente: ' + id + '</strong><br>Fecha: ' + (proy.fecha || '') + '<br>Estado: ' + (proy.estado || '') + '</div>' +
         '</div>' +
         '<div class="box"><h3>1. Datos del Emprendedor Solicitante</h3><div class="grid">' +
           '<div><strong>Nombre y Apellido:</strong> ' + nom + '</div>' +
           '<div><strong>Teléfono / WhatsApp:</strong> ' + tel + '</div>' +
-          '<div><strong>Barrio / Zona Rural:</strong> ' + bar + '</div>' +
+          '<div><strong>Barrio / Localidad:</strong> ' + bar + '</div>' +
           '<div><strong>Rubro Productivo:</strong> ' + rub + '</div>' +
           '<div><strong>Etapa Actual:</strong> ' + (proy.etapa || '') + '</div>' +
           '<div><strong>Impacto Familiar:</strong> ' + (proy.familia || '') + '</div>' +
@@ -948,7 +1710,7 @@
     }
 
     // =========================================================================
-    // GESTIÓN, EDICIÓN COMPLETA Y APROBACIÓN DE EMPRENDEDORES (FERIA DIGITAL)
+    // MÓDULO EXISTENTE: FERIA DIGITAL Y GUÍA DE EMPRENDEDORES
     // =========================================================================
     async function fetchEmprendedoresAdmin() {
       const cont = document.getElementById('contenedorEmprendedoresAdmin');
@@ -1003,19 +1765,19 @@
 
       const listaBarriosBase = [
         "Centro", "Santa Teresita", "San Cayetano", "El Cruce", "Centro 2",
-        "Luján", "25 de Mayo", "El Bordo", "Betania", "Zona Rural / Finca", "Otro Barrio"
+        "Luján", "25 de Mayo", "Campo Santo", "El Bordo", "Betania", "Zona Rural / Finca", "Otro Barrio"
       ];
 
       const listaRubrosBase = [
-      "🥖 Comidas y Pan Casero",
-      "🌾 Huerta, Campo y Granja",
-      "🧱 Albañil, Plomero y Electricista",
-      "✂️ Costura, Tejido y Artesanías",
-      "🚜 Fletes, Poda y Trabajos Rurales",
-      "💍 Bijoutería",
-      "💇‍♀️ Peluquería",
-      "💅 Belleza cosmética o uñas y pestañas"
-    ];
+        "🥖 Comidas y Pan Casero",
+        "🌾 Huerta, Campo y Granja",
+        "🧱 Albañil, Plomero y Electricista",
+        "✂️ Costura, Tejido y Artesanías",
+        "🚜 Fletes, Poda y Trabajos Rurales",
+        "💍 Bijoutería",
+        "💇‍♀️ Peluquería",
+        "💅 Belleza cosmética o uñas y pestañas"
+      ];
 
       cont.innerHTML = filtrados.map(function(emp) {
         const estaAprobado = String(emp.estado).includes('Aprobado');
@@ -1080,12 +1842,12 @@
           '<div class="controls" style="margin-top:8px;">' +
             '<div class="field-group">' +
               '<label class="field-label">👤 Nombre del Emprendedor o Emprendimiento</label>' +
-              '<input type="text" id="nom_emp_' + emp.id + '" value="' + nombreSeguro + '" placeholder="Nombre del vecino o comercio" oninput="marcarCambioEmpSinGuardar(\'' + emp.id + '\')" />' +
+              '<input type="text" id="nom_emp_' + emp.id + '" value="' + nombreSeguro + '" oninput="marcarCambioEmpSinGuardar(\'' + emp.id + '\')" />' +
             '</div>' +
 
             '<div class="field-group">' +
               '<label class="field-label">📱 Número de Celular / WhatsApp</label>' +
-              '<input type="tel" id="tel_emp_' + emp.id + '" value="' + telSeguro + '" placeholder="Ej: 3875622260" oninput="marcarCambioEmpSinGuardar(\'' + emp.id + '\')" />' +
+              '<input type="tel" id="tel_emp_' + emp.id + '" value="' + telSeguro + '" oninput="marcarCambioEmpSinGuardar(\'' + emp.id + '\')" />' +
             '</div>' +
 
             '<div class="field-group">' +
@@ -1104,7 +1866,7 @@
 
             '<div class="field-group">' +
               '<label class="field-label">🔒 PIN de Edición (4 núm)</label>' +
-              '<input type="text" id="pin_emp_' + emp.id + '" maxlength="4" value="' + pinSeguro + '" placeholder="4 dígitos" oninput="marcarCambioEmpSinGuardar(\'' + emp.id + '\')" />' +
+              '<input type="text" id="pin_emp_' + emp.id + '" maxlength="4" value="' + pinSeguro + '" oninput="marcarCambioEmpSinGuardar(\'' + emp.id + '\')" />' +
             '</div>' +
           '</div>' +
 
@@ -1145,7 +1907,7 @@
       const textoPin = pin ? '\n🔒 *Tu PIN secreto para editar tu publicación cuando quieras:* ' + pin : '';
       const msg = encodeURIComponent(
         '¡Hola *' + nom + '*! 🎉 Te escribimos de la Secretaría de Desarrollo Humano.\n\n' +
-        'Te informamos que tu emprendimiento (*' + rub + '*) ya se encuentra verificado y publicado en la *🛒 Feria Digital y Guía de Oficios del Pueblo*.' +
+        'Te informamos que tu emprendimiento (*' + rub + '*) ya se encuentra verificado y publicado en la *🛒 Feria Digital y Guía de Oficios*.' +
         textoPin + '\n\n¡Muchas gracias por sumarte!'
       );
       window.open('https://wa.me/' + telWa + '?text=' + msg, '_blank');
@@ -1199,7 +1961,6 @@
     // =========================================================================
     // BANDEJA DE RECLAMOS Y ESTADÍSTICAS
     // =========================================================================
-
     function updateKPIs() {
       const total = datos.length || 1;
       const urg = datos.filter(function(r) { return normalizarSemaforo(r.semaforo).esUrgente && r.estado !== '✅ Resuelto'; }).length;
@@ -1217,19 +1978,6 @@
       document.getElementById('pctPendientes').innerText = Math.round((pend / total) * 100) + '%';
       document.getElementById('pctProceso').innerText = Math.round((proc / total) * 100) + '%';
       document.getElementById('pctResueltos').innerText = Math.round((res / total) * 100) + '%';
-    }
-
-
-    function detectarBarrioCliente(texto) {
-      const m = String(texto || '').match(/\b(?:barrio|b°|bº|villa|loteo)\s+([a-záéíóúñ0-9\s]{3,20})/i);
-      if (m && m[1]) {
-        return m[1].split(/\b(?:calle|mza|casa|mi |soy |cel|tengo|hay)\b/i)[0].replace(/[.,;:]/g, '').trim();
-      }
-      const conocidos = ["Libertad", "Centro", "San Cayetano", "25 de Mayo", "Islas Malvinas", "El Bordo", "Betania", "9 de Julio", "Belgrano", "Güemes"];
-      for (let i = 0; i < conocidos.length; i++) {
-        if (String(texto || '').toLowerCase().includes(conocidos[i].toLowerCase())) return conocidos[i];
-      }
-      return "Sin especificar";
     }
 
     function detectarTipoEspecifico(r) {
@@ -1278,7 +2026,6 @@
           return;
         }
 
-        // Mostrar link directo al Google Sheet donde se guardan los datos
         if (d.sheetUrl) {
           let btnSheet = document.getElementById('btnVerSheet');
           if (!btnSheet) {
@@ -1310,7 +2057,6 @@
       const valorActual = sel.value;
       const barriosSet = new Set();
       datos.forEach(function(r) {
-        // Usa directamente el barrio extraído por el backend (sin duplicar lógica en el cliente)
         const b = r.barrio || "Sin especificar";
         r.barrioDetectado = b;
         barriosSet.add(b);
@@ -1368,7 +2114,7 @@
       if (drawer.style.display === 'block') {
         drawer.style.display = 'none';
       } else {
-        if (!iframe.src || iframe.src === 'about:blank') {
+        if (urlEmbed && (!iframe.src || iframe.src === 'about:blank')) {
           iframe.src = urlEmbed;
         }
         drawer.style.display = 'block';
@@ -1568,8 +2314,7 @@
       }
 
       const Lineas = [
-        '🏛️ *MUNICIPALIDAD DE ...*',
-        '*Atención Ciudadana*',
+        '🏛️ *ATENCIÓN CIUDADANA MUNICIPAL*',
         '',
         '📋 *Ticket de Reclamo:* #' + itemActualizado.id,
         '🚦 *Estado actual:* ' + estadoActual,
