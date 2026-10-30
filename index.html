@@ -14,6 +14,7 @@
       --teal-proy: #0d9488;
       --amber: #d97706;
       --blue: #2563eb;
+      --red: #dc2626;
       --bg-app: #d1d7db;
       --bg-chat: #efeae2;
       --user-msg: #d9fdd3;
@@ -110,7 +111,7 @@
       left: 0;
       bottom: 0;
       width: 88%;
-      max-width: 350px;
+      max-width: 355px;
       height: 100%;
       background: #ffffff;
       z-index: 100;
@@ -153,13 +154,13 @@
       min-height: 0;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
-      padding: 12px 12px 36px 12px;
+      padding: 12px 12px 44px 12px;
       display: flex;
       flex-direction: column;
       gap: 10px;
     }
 
-    /* Estilos de Carpetas del Menú (flex-shrink: 0 evita que se aplasten o corten) */
+    /* Estilos de Carpetas del Menú */
     .folder-card {
       flex-shrink: 0;
       border: 1.5px solid #e2e8f0;
@@ -233,6 +234,9 @@
       background: #ffffff;
       flex-direction: column;
       gap: 8px;
+      max-height: 350px;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
     }
     .folder-card.open .folder-content {
       display: flex;
@@ -250,6 +254,7 @@
       gap: 11px;
       text-align: left;
       cursor: pointer;
+      text-decoration: none;
       transition: transform 0.12s ease, background 0.15s ease;
     }
     .menu-big-btn:active {
@@ -262,6 +267,7 @@
     .menu-big-btn.urgente-highlight { background: #fef2f2; border-color: #fecaca; }
     .menu-big-btn.evento-highlight { background: #eff6ff; border-color: #bfdbfe; }
     .menu-big-btn.transporte-highlight { background: #fefce8; border-color: #fde047; }
+    .menu-big-btn.violeta-highlight { background: #faf5ff; border-color: #d8b4fe; }
 
     .menu-icon {
       font-size: 23px;
@@ -274,6 +280,10 @@
       justify-content: center;
       box-shadow: 0 2px 4px rgba(0,0,0,0.06);
       flex-shrink: 0;
+    }
+    .menu-text {
+      flex: 1;
+      min-width: 0;
     }
     .menu-text strong {
       display: block;
@@ -288,6 +298,66 @@
       color: #475569;
       margin-top: 2px;
       font-weight: 500;
+    }
+    .call-pill {
+      background: #dc2626;
+      color: #fff;
+      font-size: 11.5px;
+      font-weight: 800;
+      padding: 5px 9px;
+      border-radius: 8px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    /* Tarjetas compactas para el historial de los últimos 10 en el menú */
+    .drawer-history-box {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      max-height: 230px;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding-right: 2px;
+    }
+    .drawer-ticket-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      flex-shrink: 0;
+    }
+    .drawer-ticket-info {
+      min-width: 0;
+    }
+    .drawer-ticket-code {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .drawer-ticket-meta {
+      font-size: 11px;
+      color: #64748b;
+      margin-top: 1px;
+    }
+    .drawer-ticket-btn {
+      background: #ecfdf5;
+      border: 1px solid #10b981;
+      color: #065f46;
+      font-size: 11.5px;
+      font-weight: 800;
+      padding: 6px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
     }
 
     /* Header */
@@ -777,6 +847,7 @@
       border-top-right-radius: 22px;
       padding: 18px 16px 24px 16px;
       overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
       box-shadow: 0 -8px 25px rgba(0,0,0,0.25);
       animation: slideUp 0.25s ease-out;
     }
@@ -1074,7 +1145,13 @@
       background: #eff6ff;
     }
 
-    /* Lista de Tickets Guardados */
+    /* Lista de Tickets Guardados en Modal */
+    #listaMisTickets {
+      max-height: 280px;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding-right: 4px;
+    }
     .ticket-item {
       display: flex;
       justify-content: space-between;
@@ -1109,7 +1186,7 @@
 
       <div class="drawer-body" id="drawerBodyScroll">
 
-        <!-- CARPETA 1: GESTIÓN CIUDADANA (CERRADA POR DEFECTO) -->
+        <!-- CARPETA 1: GESTIÓN CIUDADANA -->
         <div class="folder-card" id="folder_ciudadana">
           <button type="button" class="folder-header" onclick="toggleCarpetaMenu('folder_ciudadana')">
             <div class="folder-header-left">
@@ -1271,14 +1348,14 @@
           </div>
         </div>
 
-        <!-- CARPETA 5: INFORMACIÓN, TRÁMITES Y AJUSTES -->
+        <!-- CARPETA 5: INFORMACIÓN Y TRÁMITES -->
         <div class="folder-card" id="folder_info">
           <button type="button" class="folder-header" onclick="toggleCarpetaMenu('folder_info')">
             <div class="folder-header-left">
               <div class="folder-icon">📌</div>
               <div class="folder-title">
-                <strong>Información, Trámites y Ajustes</strong>
-                <span>Becas, proyectos, guardia y configuración</span>
+                <strong>Información y Trámites</strong>
+                <span>Becas, subsidios y proyectos presentados</span>
               </div>
             </div>
             <span class="folder-arrow">▼</span>
@@ -1298,11 +1375,84 @@
                 <span>Requisitos e inscripciones abiertas</span>
               </div>
             </button>
-            <button type="button" class="menu-big-btn" onclick="cerrarMenuLateral(); limpiarChat();">
+          </div>
+        </div>
+
+        <!-- CARPETA 6 (NUEVA): SOLO NÚMEROS DE EMERGENCIA Y SOPORTE TÉCNICO -->
+        <div class="folder-card" id="folder_emergencias">
+          <button type="button" class="folder-header" onclick="toggleCarpetaMenu('folder_emergencias')">
+            <div class="folder-header-left">
+              <div class="folder-icon">🚨</div>
+              <div class="folder-title">
+                <strong>Emergencias y Soporte Técnico</strong>
+                <span>Policía, Violencia de Género, Bomberos y Soporte</span>
+              </div>
+            </div>
+            <span class="folder-arrow">▼</span>
+          </button>
+          <div class="folder-content">
+            <a href="tel:911" class="menu-big-btn urgente-highlight">
+              <div class="menu-icon">🚓</div>
+              <div class="menu-text">
+                <strong>Policía / Emergencias</strong>
+                <span>Atención policial inmediata (911 / 101)</span>
+              </div>
+              <span class="call-pill">📞 911</span>
+            </a>
+
+            <a href="tel:144" class="menu-big-btn violeta-highlight">
+              <div class="menu-icon">💜</div>
+              <div class="menu-text">
+                <strong>Violencia de Género</strong>
+                <span>Contención y asesoramiento las 24 hs</span>
+              </div>
+              <span class="call-pill" style="background:#7e22ce;">📞 144</span>
+            </a>
+
+            <a href="tel:100" class="menu-big-btn reclamo-highlight">
+              <div class="menu-icon">🚒</div>
+              <div class="menu-text">
+                <strong>Bomberos Voluntarios</strong>
+                <span>Incendios, rescates y siniestros</span>
+              </div>
+              <span class="call-pill" style="background:#d97706;">📞 100</span>
+            </a>
+
+            <a href="https://wa.me/5493875622260?text=Hola,%20necesito%20ayuda%20con%20el%20Asistente%20Ciudadano" target="_blank" class="menu-big-btn proy-highlight">
+              <div class="menu-icon">🛠️</div>
+              <div class="menu-text">
+                <strong>Soporte Técnico de la App</strong>
+                <span>Ayuda por WhatsApp: 3875-622260</span>
+              </div>
+              <span class="call-pill" style="background:#0d9488;">📲 Chat</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- CARPETA 7 (NUEVA): MIS GESTIONES (ÚLTIMOS 10) Y BORRAR CHAT -->
+        <div class="folder-card" id="folder_historial">
+          <button type="button" class="folder-header" onclick="toggleCarpetaMenu('folder_historial')">
+            <div class="folder-header-left">
+              <div class="folder-icon">🗂️</div>
+              <div class="folder-title">
+                <strong>Mis Gestiones y Borrar Chat</strong>
+                <span>Últimos 10 trámites registrados y reinicio</span>
+              </div>
+            </div>
+            <span class="folder-arrow">▼</span>
+          </button>
+          <div class="folder-content">
+            <div style="font-size:11.5px;font-weight:800;color:#475569;text-transform:uppercase;padding:2px 4px;">
+              📋 Tus Últimos 10 Registros (Reclamos / Proyectos / Feria / Remis)
+            </div>
+
+            <div class="drawer-history-box" id="listaMisTicketsMenu"></div>
+
+            <button type="button" class="menu-big-btn urgente-highlight" style="margin-top:4px;" onclick="cerrarMenuLateral(); limpiarChat();">
               <div class="menu-icon">🗑️</div>
               <div class="menu-text">
-                <strong>Borrar Todo y Reiniciar</strong>
-                <span>Limpia la charla y tus datos escritos</span>
+                <strong>Borrar Chat y Reiniciar Todo</strong>
+                <span>Limpia la conversación y tus datos guardados</span>
               </div>
             </button>
           </div>
@@ -1323,7 +1473,7 @@
         </div>
       </div>
       <div class="header-actions">
-        <button type="button" onclick="abrirMisTickets()" title="Ver mis códigos de reclamo o proyecto">🎫 <span id="badgeMisTickets"></span></button>
+        <button type="button" onclick="abrirMisTickets()" title="Ver mis últimos 10 códigos registrados">🎫 <span id="badgeMisTickets"></span></button>
         <button type="button" onclick="limpiarChat()" title="Borrar conversación y todos los datos">🗑️</button>
       </div>
     </div>
@@ -1461,22 +1611,22 @@
     </div>
 
     <!-- ======================================================================= -->
-    <!-- MODAL 2: MIS TICKETS GUARDADOS Y CONSULTA DE ESTADO CON PIN -->
+    <!-- MODAL 2: MIS ÚLTIMOS 10 REGISTROS Y CONSULTA DE ESTADO CON PIN -->
     <!-- ======================================================================= -->
     <div class="sheet-overlay" id="modalTickets">
       <div class="sheet-card">
         <div class="sheet-header">
-          <h3>🎫 Mis Reclamos y Proyectos</h3>
+          <h3>🎫 Mis Últimas 10 Gestiones</h3>
           <button type="button" class="sheet-close" onclick="cerrarMisTickets()">✕</button>
         </div>
         <p style="font-size:13.5px;color:#334155;margin-bottom:10px;">
-          Para cuidar tu privacidad, poné tu <strong>🔒 PIN de 4 números</strong> y tocá tu código para ver el dictamen oficial:
+          Acá aparecen tus últimos 10 tickets, proyectos, emprendimientos o altas de remisero. Poné tu <strong>🔒 PIN de 4 números</strong> y tocá uno para consultar o gestionar:
         </p>
         <div id="listaMisTickets" style="margin-bottom:14px;"></div>
 
         <div class="form-group">
-          <label>1. Código (#ID o PROY-...) o Tu Número de Celular</label>
-          <input type="text" id="inputCodigoEstado" placeholder="Ej: #A50817, PROY-1234 o tu celular 3875..." />
+          <label>1. Código (#ID, PROY-..., EMP-..., REM-...) o Tu Celular</label>
+          <input type="text" id="inputCodigoEstado" placeholder="Ej: #A50817, PROY-1234, REM-1234 o tu celular" />
         </div>
         <div class="form-group">
           <label>2. Tu PIN Secreto (4 números)</label>
@@ -2067,8 +2217,9 @@
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxT7U0FSkmHYzNdny6Wg2rpCc-uAvqiJU1IZZOlGg83f4VMh5Uy9YsCOyd0WlZtSWma/exec';
 
     const MAX_ARCHIVOS = 3;
+    const MAX_HISTORIAL_GESTIONES = 10;
     let historialChat = JSON.parse(localStorage.getItem('muni_chat_hist') || '[]');
-    let misTickets = JSON.parse(localStorage.getItem('muni_mis_tickets') || '[]');
+    let misTickets = JSON.parse(localStorage.getItem('muni_mis_tickets') || '[]').slice(0, MAX_HISTORIAL_GESTIONES);
     let archivosActuales = [];
     let gpsActualUrl = null;
 
@@ -2160,11 +2311,13 @@
       document.getElementById('vecinoPin').value = localStorage.getItem('muni_vecino_pin') || '';
       actualizarEstiloInputs();
       actualizarBadgeTickets();
+      renderHistorialEnMenuYModal();
       mostrarBienvenidaOHistorial();
     };
 
     // Funciones del Menú Lateral Izquierdo y Carpetas Acordeón
     function abrirMenuLateral() {
+      renderHistorialEnMenuYModal();
       document.getElementById('drawerOverlay').classList.add('open');
       document.getElementById('sideDrawer').classList.add('open');
     }
@@ -2234,23 +2387,104 @@
       setTimeout(() => toast.classList.remove('show'), 2800);
     }
 
+    // Identifica qué tipo de registro es según su prefijo
+    function obtenerEtiquetaTipoRegistro(idBruto) {
+      const id = String(idBruto || '').toUpperCase();
+      if (id.startsWith('PROY-')) return '🚀 Proyecto';
+      if (id.startsWith('EMP-')) return '🛒 Emprendimiento';
+      if (id.startsWith('REM-')) return '🚕 Remisero';
+      return '🛠️ Reclamo';
+    }
+
+    // Guarda hasta los últimos 10 registros (Tickets, Proyectos, Emprendimientos, Remisero)
     function registrarTicketLocal(codigo) {
-      const limpio = codigo.replace('#', '').toUpperCase();
+      const limpio = String(codigo || '').replace('#', '').trim().toUpperCase();
       if (limpio.length < 5) return;
-      if (!misTickets.some(t => t.id === limpio)) {
-        misTickets.unshift({
-          id: limpio,
-          fecha: new Date().toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
-        });
-        if (misTickets.length > 8) misTickets = misTickets.slice(0, 8);
-        localStorage.setItem('muni_mis_tickets', JSON.stringify(misTickets));
-        actualizarBadgeTickets();
+
+      misTickets = misTickets.filter(t => t.id !== limpio);
+      misTickets.unshift({
+        id: limpio,
+        tipo: obtenerEtiquetaTipoRegistro(limpio),
+        fecha: new Date().toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
+      });
+
+      if (misTickets.length > MAX_HISTORIAL_GESTIONES) {
+        misTickets = misTickets.slice(0, MAX_HISTORIAL_GESTIONES);
       }
+
+      localStorage.setItem('muni_mis_tickets', JSON.stringify(misTickets));
+      actualizarBadgeTickets();
+      renderHistorialEnMenuYModal();
     }
 
     function actualizarBadgeTickets() {
       const b = document.getElementById('badgeMisTickets');
       b.textContent = misTickets.length > 0 ? `(${misTickets.length})` : '';
+    }
+
+    function renderHistorialEnMenuYModal() {
+      const contMenu = document.getElementById('listaMisTicketsMenu');
+      const contModal = document.getElementById('listaMisTickets');
+      const ultimos10 = misTickets.slice(0, MAX_HISTORIAL_GESTIONES);
+
+      if (ultimos10.length === 0) {
+        const vacioHtml = '<div style="padding:10px;background:#f8fafc;border-radius:10px;font-size:12.5px;color:#64748b;text-align:center;">Todavía no tenés reclamos, proyectos, emprendimientos ni altas de remisero en este dispositivo.</div>';
+        if (contMenu) contMenu.innerHTML = vacioHtml;
+        if (contModal) contModal.innerHTML = vacioHtml;
+        return;
+      }
+
+      if (contMenu) {
+        contMenu.innerHTML = ultimos10.map(t => {
+          const codigoMostrar = /^(PROY-|EMP-|REM-)/.test(t.id) ? t.id : '#' + t.id;
+          const etiqueta = t.tipo || obtenerEtiquetaTipoRegistro(t.id);
+          return `
+            <div class="drawer-ticket-row">
+              <div class="drawer-ticket-info">
+                <div class="drawer-ticket-code">${etiqueta}: ${codigoMostrar}</div>
+                <div class="drawer-ticket-meta">📅 ${t.fecha}</div>
+              </div>
+              <button type="button" class="drawer-ticket-btn" onclick="cerrarMenuLateral(); accionarRegistroGuardado('${t.id}');">
+                ${t.id.startsWith('EMP-') ? '✏️ Editar' : '🔍 Ver'}
+              </button>
+            </div>
+          `;
+        }).join('');
+      }
+
+      if (contModal) {
+        contModal.innerHTML = ultimos10.map(t => {
+          const codigoMostrar = /^(PROY-|EMP-|REM-)/.test(t.id) ? t.id : '#' + t.id;
+          const etiqueta = t.tipo || obtenerEtiquetaTipoRegistro(t.id);
+          return `
+            <div class="ticket-item">
+              <div>
+                <div class="ticket-code">${etiqueta} • ${codigoMostrar}</div>
+                <div class="ticket-date">Registrado: ${t.fecha}</div>
+              </div>
+              <button type="button" class="chip status-chip" onclick="accionarRegistroGuardado('${t.id}')">
+                ${t.id.startsWith('EMP-') ? '✏️ Editar' : '🔍 Ver Estado'}
+              </button>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    function accionarRegistroGuardado(id) {
+      const limpio = String(id || '').toUpperCase();
+      if (limpio.startsWith('EMP-')) {
+        cerrarMisTickets();
+        localStorage.setItem('muni_mi_emp_id', limpio);
+        document.getElementById('editEmpBusqueda').value = limpio;
+        abrirModalFeria('EDITAR');
+        return;
+      }
+      if (limpio.startsWith('REM-')) {
+        localStorage.setItem('muni_mi_rem_id', limpio);
+        document.getElementById('loginRemisDato').value = limpio;
+      }
+      consultarTicketDirecto(limpio);
     }
 
     function copiarCodigoTicket(codigo) {
@@ -2261,10 +2495,12 @@
         mostrarToast(`🔒 PIN ${codigo} guardado en tu barra de seguridad`);
       } else if (/^EMP-/i.test(codigo)) {
         localStorage.setItem('muni_mi_emp_id', codigo.toUpperCase());
-        mostrarToast(`📋 Código ${codigo} guardado para editar tu emprendimiento`);
+        registrarTicketLocal(codigo);
+        mostrarToast(`📋 Código ${codigo} guardado en tus últimas 10 gestiones`);
       } else if (/^REM-/i.test(codigo)) {
         localStorage.setItem('muni_mi_rem_id', codigo.toUpperCase());
-        mostrarToast(`🚕 Código ${codigo} guardado para tu panel de remisero`);
+        registrarTicketLocal(codigo);
+        mostrarToast(`🚕 Código ${codigo} guardado en tus últimas 10 gestiones`);
       } else {
         registrarTicketLocal(codigo);
         document.getElementById('userInput').value = `Quiero consultar el estado de mi reclamo ${codigo}`;
@@ -2297,8 +2533,9 @@
           '• 🛠️ **Gestión Ciudadana:** Reclamos barriales, asistencia social y estado de trámites.\n' +
           '• 🎉 **Eventos y Ferias Municipales:** Fechas y mapas de fiestas, ferias sociales y culturales.\n' +
           '• 🛒 **Feria Digital y Producción:** Guía de oficios y solicitud de herramientas/microcréditos.\n' +
-          '• 🚕 **Transporte y Movilidad:** Remises disponibles ahora y mapa de paradas del Colectivo Urbano en todo el Dpto. General Güemes.\n\n' +
-          'En caso de consultas técnicas, escribinos al **3875-622260**.'
+          '• 🚕 **Transporte y Movilidad:** Remises disponibles ahora y mapa de paradas del Colectivo Urbano en todo el Dpto. General Güemes.\n' +
+          '• 🚨 **Emergencias y Soporte:** Policía, Violencia de Género, Bomberos y asistencia técnica.\n' +
+          '• 🗂️ **Mis Gestiones:** Tus últimos 10 trámites registrados y opción para borrar el chat.'
         );
       } else {
         for (let i = 0; i < historialChat.length; i++) {
@@ -2310,7 +2547,7 @@
     }
 
     function formatearTexto(texto) {
-      const matches = String(texto).match(/(?:#[A-Z0-9]{5,8}|PROY-[A-Z0-9]{4,6})/gi);
+      const matches = String(texto).match(/(?:#[A-Z0-9]{5,8}|PROY-[A-Z0-9]{4,6}|EMP-[A-Z0-9]{4,6}|REM-[A-Z0-9]{4,6})/gi);
       if (matches) matches.forEach(m => registrarTicketLocal(m));
 
       return String(texto)
@@ -2629,7 +2866,10 @@
           return;
         }
 
-        if (data.id) localStorage.setItem('muni_mi_rem_id', data.id);
+        if (data.id) {
+          localStorage.setItem('muni_mi_rem_id', data.id);
+          registrarTicketLocal(data.id);
+        }
         if (data.pinAsignado) {
           document.getElementById('vecinoPin').value = data.pinAsignado;
           document.getElementById('loginRemisPin').value = data.pinAsignado;
@@ -2670,6 +2910,7 @@
 
         if (d.status === 'success' && d.remisero) {
           const r = d.remisero;
+          registrarTicketLocal(r.id);
           document.getElementById('editRemId').value = r.id;
           document.getElementById('saludoChoferActivo').innerHTML = `🔓 <strong>${r.nombre}</strong> (${r.id})`;
           document.getElementById('editRemDisponibilidad').value = r.disponibilidad || '🟢 Disponible';
@@ -3162,6 +3403,7 @@
 
         if (data.status === 'success' && data.emprendimientos && data.emprendimientos.length > 0) {
           misEmprendimientosVerificados = data.emprendimientos;
+          misEmprendimientosVerificados.forEach(e => registrarTicketLocal(e.id));
           document.getElementById('vecinoPin').value = pin;
           guardarDatosVecino();
 
@@ -3354,7 +3596,10 @@
           return;
         }
 
-        if (data.id) localStorage.setItem('muni_mi_emp_id', data.id);
+        if (data.id) {
+          localStorage.setItem('muni_mi_emp_id', data.id);
+          registrarTicketLocal(data.id);
+        }
         if (data.pinAsignado) {
           document.getElementById('vecinoPin').value = data.pinAsignado;
           document.getElementById('editEmpPinAcceso').value = data.pinAsignado;
@@ -3504,20 +3749,7 @@
 
     function abrirMisTickets() {
       document.getElementById('inputPinModalEstado').value = document.getElementById('vecinoPin').value;
-      const cont = document.getElementById('listaMisTickets');
-      if (misTickets.length === 0) {
-        cont.innerHTML = '<div style="padding:12px;background:#f8fafc;border-radius:10px;font-size:13px;color:#64748b;text-align:center;">Aún no tenés códigos guardados en este celular. Podés buscar abajo con tu código o celular + PIN.</div>';
-      } else {
-        cont.innerHTML = misTickets.map(t => `
-          <div class="ticket-item">
-            <div>
-              <div class="ticket-code">${t.id.startsWith('PROY-') ? t.id : '#' + t.id}</div>
-              <div class="ticket-date">Registrado: ${t.fecha}</div>
-            </div>
-            <button type="button" class="chip status-chip" onclick="consultarTicketDirecto('${t.id}')">🔍 Ver Estado</button>
-          </div>
-        `).join('');
-      }
+      renderHistorialEnMenuYModal();
       document.getElementById('modalTickets').classList.add('open');
     }
 
@@ -3536,7 +3768,7 @@
         guardarDatosVecino();
       }
       cerrarMisTickets();
-      const prefijo = id.startsWith('PROY-') ? id : `#${id}`;
+      const prefijo = /^(PROY-|EMP-|REM-)/.test(id) ? id : `#${id}`;
       enviarRapido(`Quiero consultar el estado de mi reclamo ${prefijo}`);
     }
 
@@ -3695,6 +3927,7 @@
       quitarUbicacionGPS();
       actualizarEstiloInputs();
       actualizarBadgeTickets();
+      renderHistorialEnMenuYModal();
 
       document.getElementById('chatBox').innerHTML = '';
       mostrarToast('✨ Conversación y datos de contacto eliminados');
